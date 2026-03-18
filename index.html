@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event QR Scanner</title>
+    <!-- Include html5-qrcode library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #reader { width: 100%; margin-bottom: 20px; }
+        .hidden { display: none; }
+        
+        /* UI Panels */
+        #action-panel, #result-panel { padding: 15px; border-radius: 8px; margin-top: 15px; }
+        #action-panel { background-color: #eef2f5; border: 1px solid #cdd4d9; }
+        
+        /* Status Colors */
+        .success { background-color: #d4edda; color: #155724; border: 2px solid #28a745; }
+        .duplicate { background-color: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
+        .invalid { background-color: #fff3cd; color: #856404; border: 2px solid #ffc107; }
+        
+        /* Buttons */
+        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-submit { background-color: #007bff; color: white; }
+        .btn-submit:hover { background-color: #0056b3; }
+        .btn-next { background-color: #6c757d; color: white; }
+        .btn-next:hover { background-color: #5a6268; }
+        
+        h2, h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Event Scanner</h2>
+    
+    <!-- Camera Viewport -->
+    <div id="reader"></div>
+
+    <!-- Step 1: Scan detected, wait for submit -->
+    <div id="action-panel" class="hidden">
+        <h3>QR Detected</h3>
+        <p><strong>Ticket ID:</strong> <span id="scanned-id"></span></p>
+        <button id="btn-submit" class="btn-submit">Submit Record</button>
+    </div>
+
+    <!-- Step 2: Show result after submit -->
+    <div id="result-panel" class="hidden">
+        <h3 id="result-name"></h3>
+        <p id="result-message"></p>
+        <button id="btn-next" class="btn-next">Scan Next Ticket</button>
+    </div>
+</div>
+
+<script>
+    // ⚠️ REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbzxP2rJhidVPskLBWxa6JXfrSUr4GolJ351yfbSzorUmouEAw7Wi4DGVoHUfKcaT-CkPg/exec";
+    
+    let html5QrcodeScanner;
+    let currentScannedId = "";
+
+    // DOM Elements
+    const actionPanel = document.getElementById('action-panel');
+    const resultPanel = document.getElementById('result-panel');
+    const scannedIdDisplay = document.getElementById('scanned-id');
+    const btnSubmit = document.getElementById('btn-submit');
+    const btnNext = document.getElementById('btn-next');
+    const resultName = document.getElementById('result-name');
+    const resultMessage = document.getElementById('result-message');
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Pause the scanner to prevent multiple scans
+        html5QrcodeScanner.pause(true);
+        currentScannedId = decodedText;
+        
+        // Show Action Panel
+        scannedIdDisplay.innerText = currentScannedId;
+        actionPanel.classList.remove('hidden');
+    }
+
+    // Submit Button Logic
+    btnSubmit.addEventListener('click', async () => {
+        btnSubmit.innerText = "Processing...";
+        btnSubmit.disabled = true;
+
+        try {
+            // Call Google Apps Script API
+            const response = await fetch(`${API_URL}?id=${encodeURIComponent(currentScannedId)}`);
+            const data = await response.json();
+
+            // Hide Action Panel, Show Result Panel
+            actionPanel.classList.add('hidden');
+            resultPanel.classList.remove('hidden');
+            
+            // Apply Colors and Text based on response
+            resultPanel.className = `hidden ${data.status}`; // Add success/duplicate/invalid class
+            resultPanel.classList.remove('hidden');
+            resultName.innerText = data.name ? data.name : "Unknown Ticket";
+            resultMessage.innerText = data.message;
+
+        } catch (error) {
+            alert("Network Error. Make sure you are connected to the internet.");
+        } finally {
+            btnSubmit.innerText = "Submit Record";
+            btnSubmit.disabled = false;
+        }
+    });
+
+    // Scan Next Button Logic
+    btnNext.addEventListener('click', () => {
+        resultPanel.classList.add('hidden');
+        actionPanel.classList.add('hidden');
+        currentScannedId = "";
+        
+        // Resume Camera
+        html5QrcodeScanner.resume();
+    });
+
+    // Initialize Scanner
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 10, qrbox: {width: 250, height: 250} }, /* verbose= */ false);
+    html5QrcodeScanner.render(onScanSuccess);
+</script>
+
+</body>
+</html>
