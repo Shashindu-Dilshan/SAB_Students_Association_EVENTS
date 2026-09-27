@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>SABSA E-Ticket Admin</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .login-card {
+      width: 420px;
+      max-width: calc(100% - 30px);
+      background: white;
+      padding: 40px;
+      border-radius: 18px;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.10);
+    }
+
+    .logo {
+      display: block;
+      max-width: 180px;
+      max-height: 80px;
+      margin: 0 auto 25px;
+    }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      color: #111827;
+      font-size: 26px;
+    }
+
+    .subtitle {
+      margin: 8px 0 30px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: bold;
+      color: #374151;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      margin-bottom: 18px;
+      border: 1px solid #d1d5db;
+      border-radius: 9px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #374151;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 9px;
+      background: #111827;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #374151;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 18px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <div class="login-card">
+
+    <img
+      src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+      class="logo"
+      alt="SABSA"
+    >
+
+    <h1>
+      SABSA E-Ticket
+    </h1>
+
+    <div class="subtitle">
+      Administration Panel
+    </div>
+
+
+    <form id="loginForm">
+
+      <label for="email">
+        Email
+      </label>
+
+      <input
+        type="email"
+        id="email"
+        placeholder="Enter admin email"
+        required
+      >
+
+
+      <label for="password">
+        Password
+      </label>
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Enter password"
+        required
+      >
+
+
+      <button
+        type="submit"
+        id="loginButton"
+      >
+        Sign In
+      </button>
+
+    </form>
+
+
+    <div
+      id="message"
+      class="message"
+    ></div>
+
+  </div>
+
+
+<script>
+
+// =========================================================
+// SUPABASE CONFIGURATION
+// =========================================================
+
+// IMPORTANT:
+// Use your Supabase PROJECT URL here.
+// Use the PUBLIC anon key here.
+//
+// NEVER put SUPABASE_SERVICE_ROLE_KEY
+// in this HTML file.
+
+const SUPABASE_URL =
+  "YOUR_SUPABASE_PROJECT_URL";
+
+const SUPABASE_ANON_KEY =
+  "YOUR_SUPABASE_ANON_KEY";
+
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+
+// =========================================================
+// LOGIN
+// =========================================================
+
+document
+  .getElementById("loginForm")
+  .addEventListener(
+    "submit",
+    async function(event) {
+
+      event.preventDefault();
+
+      const email =
+        document
+          .getElementById("email")
+          .value
+          .trim();
+
+      const password =
+        document
+          .getElementById("password")
+          .value;
+
+
+      const button =
+        document
+          .getElementById("loginButton");
+
+      const message =
+        document
+          .getElementById("message");
+
+
+      button.disabled = true;
+
+      button.textContent =
+        "Signing in...";
+
+      message.style.display =
+        "none";
+
+
+      try {
+
+        // -----------------------------------------------
+        // Supabase authentication
+        // -----------------------------------------------
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient.auth
+            .signInWithPassword({
+              email,
+              password
+            });
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        // -----------------------------------------------
+        // Check logged-in user
+        // -----------------------------------------------
+
+        const user =
+          data.user;
+
+
+        if (!user) {
+          throw new Error(
+            "Login failed."
+          );
+        }
+
+
+        // -----------------------------------------------
+        // Check admins table
+        // -----------------------------------------------
+
+        const {
+          data: admin,
+          error: adminError
+        } =
+          await supabaseClient
+            .from("admins")
+            .select("id, email, role")
+            .eq("id", user.id)
+            .maybeSingle();
+
+
+        if (adminError) {
+          throw adminError;
+        }
+
+
+        if (!admin) {
+
+          await supabaseClient.auth
+            .signOut();
+
+          throw new Error(
+            "You are not authorized to access the admin panel."
+          );
+        }
+
+
+        // -----------------------------------------------
+        // Check role
+        // -----------------------------------------------
+
+        if (
+          admin.role !== "ADMIN" &&
+          admin.role !== "STAFF"
+        ) {
+
+          await supabaseClient.auth
+            .signOut();
+
+          throw new Error(
+            "Your account does not have admin access."
+          );
+        }
+
+
+        // -----------------------------------------------
+        // Successful login
+        // -----------------------------------------------
+
+        message.textContent =
+          "Login successful. Opening dashboard...";
+
+        message.className =
+          "message success";
+
+        message.style.display =
+          "block";
+
+
+        setTimeout(
+          function() {
+
+            window.location.href =
+              "admin-dashboard.html";
+
+          },
+          700
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        message.textContent =
+          error.message ||
+          "Login failed.";
+
+        message.className =
+          "message error";
+
+        message.style.display =
+          "block";
+
+        button.disabled =
+          false;
+
+        button.textContent =
+          "Sign In";
+      }
+
+    }
+  );
+
+
+// =========================================================
+// CHECK EXISTING SESSION
+// =========================================================
+
+async function checkExistingSession() {
+
+  const {
+    data
+  } =
+    await supabaseClient.auth
+      .getSession();
+
+
+  if (data.session) {
+
+    const user =
+      data.session.user;
+
+
+    const {
+      data: admin
+    } =
+      await supabaseClient
+        .from("admins")
+        .select("id, email, role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+
+    if (admin) {
+
+      window.location.href =
+        "admin-dashboard.html";
+
+    }
+
+  }
+
+}
+
+
+checkExistingSession();
+
+</script>
+
+</body>
+
+</html>
