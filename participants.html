@@ -6,7 +6,6 @@
 
   <title>Participants | SABSA E-Ticket System</title>
 
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -236,6 +235,170 @@
     }
 
     /* =========================
+       BULK EMAIL PANEL
+    ========================= */
+
+    .bulk-card {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-left: 5px solid #2563eb;
+    }
+
+    .bulk-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 15px;
+    }
+
+    .bulk-header h2 {
+      font-size: 18px;
+      color: #111827;
+    }
+
+    .bulk-header p {
+      color: #6b7280;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .bulk-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 200px;
+      gap: 15px;
+      align-items: end;
+    }
+
+    .bulk-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: bold;
+      color: #4b5563;
+      margin-bottom: 7px;
+    }
+
+    .batch-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .batch-summary-box {
+      padding: 13px;
+      border-radius: 8px;
+      background: #f9fafb;
+      text-align: center;
+    }
+
+    .batch-summary-box .summary-number {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .batch-summary-box .summary-label {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .summary-total {
+      color: #2563eb;
+    }
+
+    .summary-sent {
+      color: #16a34a;
+    }
+
+    .summary-pending {
+      color: #d97706;
+    }
+
+    .summary-failed {
+      color: #dc2626;
+    }
+
+    .bulk-action-row {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .bulk-info {
+      font-size: 12px;
+      color: #6b7280;
+      flex: 1;
+    }
+
+    .bulk-send-btn {
+      border: none;
+      background: #2563eb;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .bulk-send-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .bulk-send-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* =========================
+       PROGRESS
+    ========================= */
+
+    .progress-container {
+      display: none;
+      margin-top: 20px;
+      padding: 18px;
+      background: #f9fafb;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .progress-bar-background {
+      width: 100%;
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #2563eb;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      margin-top: 10px;
+      color: #6b7280;
+      font-size: 12px;
+    }
+
+    /* =========================
        FILTERS
     ========================= */
 
@@ -360,7 +523,7 @@
     }
 
     /* =========================
-       STATUS BADGES
+       STATUS
     ========================= */
 
     .status {
@@ -392,7 +555,7 @@
     }
 
     /* =========================
-       ACTION BUTTONS
+       ACTION BUTTON
     ========================= */
 
     .action-btn {
@@ -494,6 +657,7 @@
     ========================= */
 
     @media (max-width: 1100px) {
+
       .stats {
         grid-template-columns: repeat(3, 1fr);
       }
@@ -501,9 +665,15 @@
       .filter-grid {
         grid-template-columns: 1fr 1fr;
       }
+
+      .bulk-controls {
+        grid-template-columns: 1fr 1fr;
+      }
+
     }
 
     @media (max-width: 750px) {
+
       .sidebar {
         width: 200px;
       }
@@ -521,13 +691,23 @@
         grid-template-columns: 1fr;
       }
 
+      .bulk-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .batch-summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .page-header {
         flex-direction: column;
         align-items: flex-start;
       }
+
     }
 
     @media (max-width: 550px) {
+
       .sidebar {
         position: relative;
         width: 100%;
@@ -550,380 +730,674 @@
       .stats {
         grid-template-columns: 1fr;
       }
+
+      .batch-summary {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .bulk-action-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
     }
+
   </style>
 </head>
 
+
 <body>
 
-  <!-- =========================
-       SIDEBAR
-  ========================= -->
 
-  <aside class="sidebar">
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
 
-    <div class="logo-area">
+<aside class="sidebar">
 
-      <img
-        src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
-        alt="SABSA Logo"
-      >
+  <div class="logo-area">
 
-      <h2>SABSA</h2>
-      <p>E-Ticket System</p>
+    <img
+      src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+      alt="SABSA Logo"
+    >
+
+    <h2>SABSA</h2>
+
+    <p>E-Ticket System</p>
+
+  </div>
+
+
+  <ul class="nav-menu">
+
+    <li>
+      <a href="admin-dashboard.html">
+        Dashboard
+      </a>
+    </li>
+
+    <li>
+      <a href="participants.html" class="active">
+        Participants
+      </a>
+    </li>
+
+    <li>
+      <a href="scanner.html">
+        Scanner
+      </a>
+    </li>
+
+    <li>
+      <a href="admin-dashboard.html">
+        Tickets
+      </a>
+    </li>
+
+    <li>
+      <a href="admin-dashboard.html">
+        Event
+      </a>
+    </li>
+
+    <li>
+      <a href="admin-dashboard.html">
+        Settings
+      </a>
+    </li>
+
+  </ul>
+
+
+  <button
+    class="logout-btn"
+    onclick="logout()"
+  >
+    Logout
+  </button>
+
+</aside>
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
+
+  <div class="page-header">
+
+    <div>
+
+      <h1>
+        Participants
+      </h1>
+
+      <p>
+        Manage registrations and send electronic tickets.
+      </p>
 
     </div>
 
-    <ul class="nav-menu">
 
-      <li>
-        <a href="admin-dashboard.html">
-          Dashboard
-        </a>
-      </li>
+    <a
+      href="admin-dashboard.html"
+      class="back-btn"
+    >
+      ← Dashboard
+    </a>
 
-      <li>
-        <a href="participants.html" class="active">
-          Participants
-        </a>
-      </li>
-
-      <li>
-        <a href="scanner.html">
-          Scanner
-        </a>
-      </li>
-
-      <li>
-        <a href="admin-dashboard.html">
-          Tickets
-        </a>
-      </li>
-
-      <li>
-        <a href="admin-dashboard.html">
-          Event
-        </a>
-      </li>
-
-      <li>
-        <a href="admin-dashboard.html">
-          Settings
-        </a>
-      </li>
-
-    </ul>
-
-    <button class="logout-btn" onclick="logout()">
-      Logout
-    </button>
-
-  </aside>
+  </div>
 
 
-  <!-- =========================
-       MAIN CONTENT
-  ========================= -->
+  <!-- ===================================================
+       EVENT SELECTOR
+  =================================================== -->
 
-  <main class="main">
+  <div class="event-card">
 
-    <div class="page-header">
+    <label for="eventSelect">
+      Select Event
+    </label>
+
+    <select
+      id="eventSelect"
+      onchange="eventChanged()"
+    >
+
+      <option value="">
+        Loading events...
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <!-- ===================================================
+       GENERAL STATISTICS
+  =================================================== -->
+
+  <div class="stats">
+
+
+    <div class="stat-card stat-total">
+
+      <div class="label">
+        Total Participants
+      </div>
+
+      <div
+        class="number"
+        id="totalCount"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat-card stat-pending">
+
+      <div class="label">
+        Pending Emails
+      </div>
+
+      <div
+        class="number"
+        id="pendingCount"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat-card stat-sent">
+
+      <div class="label">
+        Emails Sent
+      </div>
+
+      <div
+        class="number"
+        id="sentCount"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat-card stat-failed">
+
+      <div class="label">
+        Failed Emails
+      </div>
+
+      <div
+        class="number"
+        id="failedCount"
+      >
+        0
+      </div>
+
+    </div>
+
+
+    <div class="stat-card stat-duplicate">
+
+      <div class="label">
+        Duplicate Emails
+      </div>
+
+      <div
+        class="number"
+        id="duplicateCount"
+      >
+        0
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+  <!-- ===================================================
+       BULK EMAIL PANEL
+  =================================================== -->
+
+  <div class="bulk-card">
+
+
+    <div class="bulk-header">
 
       <div>
-        <h1>Participants</h1>
-        <p>Manage event registrations and ticket email status.</p>
-      </div>
-
-      <a href="admin-dashboard.html" class="back-btn">
-        ← Dashboard
-      </a>
-
-    </div>
-
-
-    <!-- =========================
-         EVENT SELECTOR
-    ========================= -->
-
-    <div class="event-card">
-
-      <label for="eventSelect">
-        Select Event
-      </label>
-
-      <select id="eventSelect" onchange="eventChanged()">
-        <option value="">Loading events...</option>
-      </select>
-
-    </div>
-
-
-    <!-- =========================
-         STATISTICS
-    ========================= -->
-
-    <div class="stats">
-
-      <div class="stat-card stat-total">
-        <div class="label">
-          Total Participants
-        </div>
-
-        <div class="number" id="totalCount">
-          0
-        </div>
-      </div>
-
-
-      <div class="stat-card stat-pending">
-        <div class="label">
-          Pending Emails
-        </div>
-
-        <div class="number" id="pendingCount">
-          0
-        </div>
-      </div>
-
-
-      <div class="stat-card stat-sent">
-        <div class="label">
-          Emails Sent
-        </div>
-
-        <div class="number" id="sentCount">
-          0
-        </div>
-      </div>
-
-
-      <div class="stat-card stat-failed">
-        <div class="label">
-          Failed Emails
-        </div>
-
-        <div class="number" id="failedCount">
-          0
-        </div>
-      </div>
-
-
-      <div class="stat-card stat-duplicate">
-        <div class="label">
-          Duplicate Emails
-        </div>
-
-        <div class="number" id="duplicateCount">
-          0
-        </div>
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         FILTERS
-    ========================= -->
-
-    <div class="filter-card">
-
-      <div class="filter-grid">
-
-        <div class="filter-group">
-
-          <label for="searchInput">
-            Search
-          </label>
-
-          <input
-            type="text"
-            id="searchInput"
-            placeholder="Name, email or registration number..."
-            oninput="applyFilters()"
-          >
-
-        </div>
-
-
-        <div class="filter-group">
-
-          <label for="batchFilter">
-            Batch
-          </label>
-
-          <select id="batchFilter" onchange="applyFilters()">
-            <option value="">All Batches</option>
-          </select>
-
-        </div>
-
-
-        <div class="filter-group">
-
-          <label for="emailStatusFilter">
-            Email Status
-          </label>
-
-          <select id="emailStatusFilter" onchange="applyFilters()">
-
-            <option value="">
-              All Statuses
-            </option>
-
-            <option value="PENDING">
-              Pending
-            </option>
-
-            <option value="SENT">
-              Sent
-            </option>
-
-            <option value="FAILED">
-              Failed
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="filter-group">
-
-          <label for="genderFilter">
-            Gender
-          </label>
-
-          <select id="genderFilter" onchange="applyFilters()">
-
-            <option value="">
-              All
-            </option>
-
-            <option value="Male">
-              Male
-            </option>
-
-            <option value="Female">
-              Female
-            </option>
-
-            <option value="Other">
-              Other
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-
-      <label class="duplicate-filter">
-
-        <input
-          type="checkbox"
-          id="duplicateOnly"
-          onchange="applyFilters()"
-        >
-
-        Show duplicate email addresses only
-
-      </label>
-
-    </div>
-
-
-    <!-- =========================
-         PARTICIPANT TABLE
-    ========================= -->
-
-    <div class="table-card">
-
-      <div class="table-header">
 
         <h2>
-          Registered Participants
+          Batch Email Sending
         </h2>
 
-        <span
-          class="table-count"
-          id="tableCount"
+        <p>
+          Send pending electronic tickets to each participant
+          in the selected batch individually.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="bulk-controls">
+
+
+      <div class="bulk-group">
+
+        <label for="bulkBatchSelect">
+          Select Batch
+        </label>
+
+        <select
+          id="bulkBatchSelect"
+          onchange="updateBatchSummary()"
         >
-          0 participants
+
+          <option value="">
+            Select a batch
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="bulk-group">
+
+        <label>
+          Event
+        </label>
+
+        <input
+          type="text"
+          id="bulkEventName"
+          readonly
+          placeholder="Select an event"
+        >
+
+      </div>
+
+
+      <div class="bulk-group">
+
+        <button
+          class="bulk-send-btn"
+          id="bulkSendBtn"
+          onclick="sendBatchTickets()"
+          disabled
+        >
+          Send Pending Tickets
+        </button>
+
+      </div>
+
+
+    </div>
+
+
+    <!-- BATCH SUMMARY -->
+
+    <div class="batch-summary">
+
+
+      <div class="batch-summary-box">
+
+        <div
+          class="summary-number summary-total"
+          id="batchTotal"
+        >
+          0
+        </div>
+
+        <div class="summary-label">
+          Total
+        </div>
+
+      </div>
+
+
+      <div class="batch-summary-box">
+
+        <div
+          class="summary-number summary-sent"
+          id="batchSent"
+        >
+          0
+        </div>
+
+        <div class="summary-label">
+          Sent
+        </div>
+
+      </div>
+
+
+      <div class="batch-summary-box">
+
+        <div
+          class="summary-number summary-pending"
+          id="batchPending"
+        >
+          0
+        </div>
+
+        <div class="summary-label">
+          Pending
+        </div>
+
+      </div>
+
+
+      <div class="batch-summary-box">
+
+        <div
+          class="summary-number summary-failed"
+          id="batchFailed"
+        >
+          0
+        </div>
+
+        <div class="summary-label">
+          Failed
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="bulk-action-row">
+
+      <div
+        class="bulk-info"
+        id="bulkInfo"
+      >
+        Select a batch to view email status.
+      </div>
+
+    </div>
+
+
+    <!-- PROGRESS -->
+
+    <div
+      class="progress-container"
+      id="progressContainer"
+    >
+
+      <div class="progress-header">
+
+        <span>
+          Sending tickets...
+        </span>
+
+        <span id="progressPercent">
+          0%
         </span>
 
       </div>
 
 
-      <div class="table-wrapper">
+      <div class="progress-bar-background">
 
-        <table>
+        <div
+          class="progress-bar"
+          id="progressBar"
+        ></div>
 
-          <thead>
+      </div>
 
-            <tr>
 
-              <th>#</th>
-
-              <th>Participant</th>
-
-              <th>Email</th>
-
-              <th>Registration No.</th>
-
-              <th>Batch</th>
-
-              <th>Gender</th>
-
-              <th>Meal</th>
-
-              <th>Ticket ID</th>
-
-              <th>Email Status</th>
-
-              <th>Action</th>
-
-            </tr>
-
-          </thead>
-
-          <tbody id="participantsTable">
-
-            <tr>
-
-              <td colspan="10">
-
-                <div class="loading">
-
-                  <div class="spinner"></div>
-
-                  Loading participants...
-
-                </div>
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
+      <div
+        class="progress-text"
+        id="progressText"
+      >
+        Preparing...
       </div>
 
     </div>
 
-  </main>
+
+  </div>
 
 
-  <!-- =========================
-       TOAST
-  ========================= -->
+  <!-- ===================================================
+       FILTERS
+  =================================================== -->
 
-  <div
-    id="toast"
-    class="toast"
-  ></div>
+  <div class="filter-card">
+
+
+    <div class="filter-grid">
+
+
+      <div class="filter-group">
+
+        <label for="searchInput">
+          Search
+        </label>
+
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Name, email or registration number..."
+          oninput="applyFilters()"
+        >
+
+      </div>
+
+
+      <div class="filter-group">
+
+        <label for="batchFilter">
+          Batch
+        </label>
+
+        <select
+          id="batchFilter"
+          onchange="applyFilters()"
+        >
+
+          <option value="">
+            All Batches
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="filter-group">
+
+        <label for="emailStatusFilter">
+          Email Status
+        </label>
+
+        <select
+          id="emailStatusFilter"
+          onchange="applyFilters()"
+        >
+
+          <option value="">
+            All Statuses
+          </option>
+
+          <option value="PENDING">
+            Pending
+          </option>
+
+          <option value="SENT">
+            Sent
+          </option>
+
+          <option value="FAILED">
+            Failed
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="filter-group">
+
+        <label for="genderFilter">
+          Gender
+        </label>
+
+        <select
+          id="genderFilter"
+          onchange="applyFilters()"
+        >
+
+          <option value="">
+            All
+          </option>
+
+          <option value="Male">
+            Male
+          </option>
+
+          <option value="Female">
+            Female
+          </option>
+
+          <option value="Other">
+            Other
+          </option>
+
+        </select>
+
+      </div>
+
+
+    </div>
+
+
+    <label class="duplicate-filter">
+
+      <input
+        type="checkbox"
+        id="duplicateOnly"
+        onchange="applyFilters()"
+      >
+
+      Show duplicate email addresses only
+
+    </label>
+
+
+  </div>
+
+
+  <!-- ===================================================
+       PARTICIPANT TABLE
+  =================================================== -->
+
+  <div class="table-card">
+
+
+    <div class="table-header">
+
+      <h2>
+        Registered Participants
+      </h2>
+
+      <span
+        class="table-count"
+        id="tableCount"
+      >
+        0 participants
+      </span>
+
+    </div>
+
+
+    <div class="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>#</th>
+
+            <th>Participant</th>
+
+            <th>Email</th>
+
+            <th>Registration No.</th>
+
+            <th>Batch</th>
+
+            <th>Gender</th>
+
+            <th>Meal</th>
+
+            <th>Ticket ID</th>
+
+            <th>Email Status</th>
+
+            <th>Action</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="participantsTable">
+
+          <tr>
+
+            <td colspan="10">
+
+              <div class="loading">
+
+                <div class="spinner"></div>
+
+                Loading participants...
+
+              </div>
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+  </div>
+
+
+</main>
+
+
+<!-- =====================================================
+     TOAST
+===================================================== -->
+
+<div
+  id="toast"
+  class="toast"
+></div>
 
 
 <script>
@@ -964,7 +1438,7 @@ let duplicateEmails = new Set();
 
 
 /* =========================================================
-   PAGE INITIALIZATION
+   PAGE START
 ========================================================= */
 
 document.addEventListener(
@@ -978,7 +1452,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   CHECK ADMIN AUTHENTICATION
+   AUTHENTICATION
 ========================================================= */
 
 async function checkAuthentication() {
@@ -1010,20 +1484,17 @@ async function checkAuthentication() {
 
     if (!session) {
 
-      window.location.href = 'admin.html';
+      window.location.href =
+        'admin.html';
 
       return;
 
     }
 
 
-    currentUser = session.user;
+    currentUser =
+      session.user;
 
-
-    /*
-      Verify that the logged-in user exists
-      in the admins table.
-    */
 
     const {
       data: admin,
@@ -1031,38 +1502,30 @@ async function checkAuthentication() {
     } =
       await supabaseClient
         .from('admins')
-        .select('id, email, role')
-        .eq('id', currentUser.id)
+        .select(
+          'id, email, role'
+        )
+        .eq(
+          'id',
+          currentUser.id
+        )
         .maybeSingle();
 
 
-    if (adminError) {
-
-      console.error(adminError);
-
-      showToast(
-        'Unable to verify administrator account.',
-        'error'
-      );
-
-      return;
-
-    }
-
-
     if (
-      !admin ||
-      !['ADMIN', 'STAFF'].includes(admin.role)
+      adminError ||
+      !admin
     ) {
 
       showToast(
-        'You do not have permission to access this page.',
+        'You do not have administrator access.',
         'error'
       );
 
       setTimeout(
         () => {
-          window.location.href = 'admin.html';
+          window.location.href =
+            'admin.html';
         },
         1500
       );
@@ -1072,7 +1535,24 @@ async function checkAuthentication() {
     }
 
 
-    currentAdmin = admin;
+    if (
+      !['ADMIN', 'STAFF'].includes(
+        admin.role
+      )
+    ) {
+
+      showToast(
+        'You do not have permission to access this page.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    currentAdmin =
+      admin;
 
 
     await loadEvents();
@@ -1108,9 +1588,12 @@ async function loadEvents() {
       await supabaseClient
         .from('events')
         .select('*')
-        .order('created_at', {
-          ascending: false
-        });
+        .order(
+          'created_at',
+          {
+            ascending: false
+          }
+        );
 
 
     if (error) {
@@ -1127,17 +1610,22 @@ async function loadEvents() {
     }
 
 
-    events = data || [];
+    events =
+      data || [];
 
 
     const eventSelect =
-      document.getElementById('eventSelect');
+      document.getElementById(
+        'eventSelect'
+      );
 
 
     eventSelect.innerHTML = '';
 
 
-    if (events.length === 0) {
+    if (
+      events.length === 0
+    ) {
 
       eventSelect.innerHTML =
         '<option value="">No events available</option>';
@@ -1155,22 +1643,23 @@ async function loadEvents() {
       event => {
 
         const option =
-          document.createElement('option');
+          document.createElement(
+            'option'
+          );
 
-        option.value = event.id;
+        option.value =
+          event.id;
 
         option.textContent =
           `${event.event_name} (${event.event_code})`;
 
-        eventSelect.appendChild(option);
+        eventSelect.appendChild(
+          option
+        );
 
       }
     );
 
-
-    /*
-      Automatically select the first event.
-    */
 
     await eventChanged();
 
@@ -1181,7 +1670,7 @@ async function loadEvents() {
     console.error(error);
 
     showToast(
-      'Unexpected error while loading events.',
+      'Unable to load events.',
       'error'
     );
 
@@ -1197,7 +1686,27 @@ async function loadEvents() {
 async function eventChanged() {
 
   const eventId =
-    document.getElementById('eventSelect').value;
+    document.getElementById(
+      'eventSelect'
+    ).value;
+
+
+  const selectedEvent =
+    events.find(
+      event =>
+        event.id === eventId
+    );
+
+
+  document.getElementById(
+    'bulkEventName'
+  ).value =
+    selectedEvent
+      ? selectedEvent.event_name
+      : '';
+
+
+  resetBulkPanel();
 
 
   if (!eventId) {
@@ -1211,7 +1720,9 @@ async function eventChanged() {
   }
 
 
-  await loadParticipants(eventId);
+  await loadParticipants(
+    eventId
+  );
 
 }
 
@@ -1220,16 +1731,14 @@ async function eventChanged() {
    LOAD PARTICIPANTS
 ========================================================= */
 
-async function loadParticipants(eventId) {
+async function loadParticipants(
+  eventId
+) {
 
   showLoading();
 
 
   try {
-
-    /*
-      We retrieve participants first.
-    */
 
     const {
       data: participantData,
@@ -1249,15 +1758,23 @@ async function loadParticipants(eventId) {
           meal,
           created_at
         `)
-        .eq('event_id', eventId)
-        .order('created_at', {
-          ascending: false
-        });
+        .eq(
+          'event_id',
+          eventId
+        )
+        .order(
+          'created_at',
+          {
+            ascending: false
+          }
+        );
 
 
     if (participantError) {
 
-      console.error(participantError);
+      console.error(
+        participantError
+      );
 
       showToast(
         'Unable to load participants.',
@@ -1269,15 +1786,10 @@ async function loadParticipants(eventId) {
     }
 
 
-    /*
-      Retrieve tickets separately.
-
-      This avoids depending on a particular
-      nested Supabase relationship name.
-    */
-
     const participantIds =
-      (participantData || []).map(
+      (
+        participantData || []
+      ).map(
         p => p.id
       );
 
@@ -1285,7 +1797,9 @@ async function loadParticipants(eventId) {
     let ticketData = [];
 
 
-    if (participantIds.length > 0) {
+    if (
+      participantIds.length > 0
+    ) {
 
       const {
         data,
@@ -1310,26 +1824,25 @@ async function loadParticipants(eventId) {
 
       if (ticketError) {
 
-        console.error(ticketError);
+        console.error(
+          ticketError
+        );
 
         showToast(
-          'Participants loaded, but ticket information could not be loaded.',
+          'Ticket information could not be loaded.',
           'error'
         );
 
       }
       else {
 
-        ticketData = data || [];
+        ticketData =
+          data || [];
 
       }
 
     }
 
-
-    /*
-      Create a ticket lookup.
-    */
 
     const ticketMap =
       new Map();
@@ -1347,23 +1860,18 @@ async function loadParticipants(eventId) {
     );
 
 
-    /*
-      Combine participant + ticket.
-    */
-
     participants =
-      (participantData || []).map(
+      (
+        participantData || []
+      ).map(
         participant => {
-
-          const ticket =
-            ticketMap.get(
-              participant.id
-            ) || null;
-
 
           return {
             ...participant,
-            ticket
+            ticket:
+              ticketMap.get(
+                participant.id
+              ) || null
           };
 
         }
@@ -1373,6 +1881,8 @@ async function loadParticipants(eventId) {
     calculateDuplicateEmails();
 
     populateBatchFilter();
+
+    populateBulkBatchSelect();
 
     updateStatistics();
 
@@ -1395,7 +1905,7 @@ async function loadParticipants(eventId) {
 
 
 /* =========================================================
-   DUPLICATE EMAIL DETECTION
+   DUPLICATE EMAILS
 ========================================================= */
 
 function calculateDuplicateEmails() {
@@ -1418,13 +1928,13 @@ function calculateDuplicateEmails() {
       }
 
 
-      const current =
-        emailCounts.get(email) || 0;
-
-
       emailCounts.set(
         email,
-        current + 1
+        (
+          emailCounts.get(
+            email
+          ) || 0
+        ) + 1
       );
 
     }
@@ -1451,7 +1961,9 @@ function calculateDuplicateEmails() {
    NORMALIZE EMAIL
 ========================================================= */
 
-function normalizeEmail(email) {
+function normalizeEmail(
+  email
+) {
 
   return String(
     email || ''
@@ -1463,7 +1975,7 @@ function normalizeEmail(email) {
 
 
 /* =========================================================
-   POPULATE BATCH FILTER
+   BATCH FILTER
 ========================================================= */
 
 function populateBatchFilter() {
@@ -1479,28 +1991,7 @@ function populateBatchFilter() {
 
 
   const batches =
-    [
-      ...new Set(
-        participants
-          .map(
-            p => p.batch
-          )
-          .filter(
-            batch =>
-              batch !== null &&
-              batch !== undefined &&
-              String(batch).trim() !== ''
-          )
-          .map(
-            batch =>
-              String(batch).trim()
-          )
-      )
-    ]
-    .sort(
-      (a, b) =>
-        a.localeCompare(b)
-    );
+    getBatches();
 
 
   batchFilter.innerHTML =
@@ -1511,20 +2002,28 @@ function populateBatchFilter() {
     batch => {
 
       const option =
-        document.createElement('option');
+        document.createElement(
+          'option'
+        );
 
-      option.value = batch;
+      option.value =
+        batch;
 
-      option.textContent = batch;
+      option.textContent =
+        batch;
 
-      batchFilter.appendChild(option);
+      batchFilter.appendChild(
+        option
+      );
 
     }
   );
 
 
   if (
-    batches.includes(currentValue)
+    batches.includes(
+      currentValue
+    )
   ) {
 
     batchFilter.value =
@@ -1536,14 +2035,101 @@ function populateBatchFilter() {
 
 
 /* =========================================================
-   UPDATE STATISTICS
+   BULK BATCH SELECT
+========================================================= */
+
+function populateBulkBatchSelect() {
+
+  const select =
+    document.getElementById(
+      'bulkBatchSelect'
+    );
+
+
+  const currentValue =
+    select.value;
+
+
+  const batches =
+    getBatches();
+
+
+  select.innerHTML =
+    '<option value="">Select a batch</option>';
+
+
+  batches.forEach(
+    batch => {
+
+      const option =
+        document.createElement(
+          'option'
+        );
+
+      option.value =
+        batch;
+
+      option.textContent =
+        batch;
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+
+  if (
+    batches.includes(
+      currentValue
+    )
+  ) {
+
+    select.value =
+      currentValue;
+
+  }
+
+
+  updateBatchSummary();
+
+}
+
+
+/* =========================================================
+   GET BATCHES
+========================================================= */
+
+function getBatches() {
+
+  return [
+    ...new Set(
+      participants
+        .map(
+          participant =>
+            String(
+              participant.batch || ''
+            ).trim()
+        )
+        .filter(
+          batch =>
+            batch !== ''
+        )
+    )
+  ].sort(
+    (a, b) =>
+      a.localeCompare(b)
+  );
+
+}
+
+
+/* =========================================================
+   UPDATE GENERAL STATS
 ========================================================= */
 
 function updateStatistics() {
-
-  const total =
-    participants.length;
-
 
   let pending = 0;
 
@@ -1561,17 +2147,23 @@ function updateStatistics() {
           : null;
 
 
-      if (status === 'PENDING') {
+      if (
+        status === 'PENDING'
+      ) {
 
         pending++;
 
       }
-      else if (status === 'SENT') {
+      else if (
+        status === 'SENT'
+      ) {
 
         sent++;
 
       }
-      else if (status === 'FAILED') {
+      else if (
+        status === 'FAILED'
+      ) {
 
         failed++;
 
@@ -1583,28 +2175,556 @@ function updateStatistics() {
 
   document.getElementById(
     'totalCount'
-  ).textContent = total;
+  ).textContent =
+    participants.length;
 
 
   document.getElementById(
     'pendingCount'
-  ).textContent = pending;
+  ).textContent =
+    pending;
 
 
   document.getElementById(
     'sentCount'
-  ).textContent = sent;
+  ).textContent =
+    sent;
 
 
   document.getElementById(
     'failedCount'
-  ).textContent = failed;
+  ).textContent =
+    failed;
 
 
   document.getElementById(
     'duplicateCount'
   ).textContent =
     duplicateEmails.size;
+
+}
+
+
+/* =========================================================
+   UPDATE SELECTED BATCH SUMMARY
+========================================================= */
+
+function updateBatchSummary() {
+
+  const batch =
+    document.getElementById(
+      'bulkBatchSelect'
+    ).value;
+
+
+  const sendButton =
+    document.getElementById(
+      'bulkSendBtn'
+    );
+
+
+  if (!batch) {
+
+    document.getElementById(
+      'batchTotal'
+    ).textContent =
+      '0';
+
+    document.getElementById(
+      'batchSent'
+    ).textContent =
+      '0';
+
+    document.getElementById(
+      'batchPending'
+    ).textContent =
+      '0';
+
+    document.getElementById(
+      'batchFailed'
+    ).textContent =
+      '0';
+
+    document.getElementById(
+      'bulkInfo'
+    ).textContent =
+      'Select a batch to view email status.';
+
+    sendButton.disabled =
+      true;
+
+    return;
+
+  }
+
+
+  const batchParticipants =
+    participants.filter(
+      participant =>
+        String(
+          participant.batch || ''
+        ).trim() === batch
+    );
+
+
+  let sent = 0;
+
+  let pending = 0;
+
+  let failed = 0;
+
+
+  batchParticipants.forEach(
+    participant => {
+
+      const status =
+        participant.ticket
+          ? participant.ticket.email_status
+          : null;
+
+
+      if (
+        status === 'SENT'
+      ) {
+
+        sent++;
+
+      }
+      else if (
+        status === 'PENDING'
+      ) {
+
+        pending++;
+
+      }
+      else if (
+        status === 'FAILED'
+      ) {
+
+        failed++;
+
+      }
+
+    }
+  );
+
+
+  document.getElementById(
+    'batchTotal'
+  ).textContent =
+    batchParticipants.length;
+
+
+  document.getElementById(
+    'batchSent'
+  ).textContent =
+    sent;
+
+
+  document.getElementById(
+    'batchPending'
+  ).textContent =
+    pending;
+
+
+  document.getElementById(
+    'batchFailed'
+  ).textContent =
+    failed;
+
+
+  if (
+    pending > 0 ||
+    failed > 0
+  ) {
+
+    sendButton.disabled =
+      false;
+
+    document.getElementById(
+      'bulkInfo'
+    ).textContent =
+      `${pending + failed} ticket(s) are available to send. Already-sent tickets will be skipped.`;
+
+  }
+  else {
+
+    sendButton.disabled =
+      true;
+
+    document.getElementById(
+      'bulkInfo'
+    ).textContent =
+      'There are no pending or failed tickets in this batch.';
+
+  }
+
+}
+
+
+/* =========================================================
+   SEND BATCH TICKETS
+========================================================= */
+
+async function sendBatchTickets() {
+
+  const eventId =
+    document.getElementById(
+      'eventSelect'
+    ).value;
+
+
+  const batch =
+    document.getElementById(
+      'bulkBatchSelect'
+    ).value;
+
+
+  if (!eventId) {
+
+    showToast(
+      'Please select an event.',
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  if (!batch) {
+
+    showToast(
+      'Please select a batch.',
+      'error'
+    );
+
+    return;
+
+  }
+
+
+  const batchParticipants =
+    participants.filter(
+      participant =>
+        String(
+          participant.batch || ''
+        ).trim() === batch
+    );
+
+
+  const pendingParticipants =
+    batchParticipants.filter(
+      participant => {
+
+        const status =
+          participant.ticket
+            ? participant.ticket.email_status
+            : null;
+
+        return (
+          status === 'PENDING' ||
+          status === 'FAILED'
+        );
+
+      }
+    );
+
+
+  if (
+    pendingParticipants.length === 0
+  ) {
+
+    showToast(
+      'There are no tickets to send.',
+      'info'
+    );
+
+    return;
+
+  }
+
+
+  const confirmed =
+    confirm(
+      `Send ${pendingParticipants.length} ticket email(s) to batch ${batch}?\n\n` +
+      `Each participant will receive a separate email containing only their own ticket.\n\n` +
+      `Already-sent tickets will not be resent.`
+    );
+
+
+  if (!confirmed) {
+
+    return;
+
+  }
+
+
+  const sendButton =
+    document.getElementById(
+      'bulkSendBtn'
+    );
+
+
+  sendButton.disabled =
+    true;
+
+
+  sendButton.textContent =
+    'Sending...';
+
+
+  showProgress(
+    pendingParticipants.length
+  );
+
+
+  try {
+
+    const {
+      data: {
+        session
+      },
+      error: sessionError
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (
+      sessionError ||
+      !session
+    ) {
+
+      throw new Error(
+        'Your login session has expired. Please log in again.'
+      );
+
+    }
+
+
+    updateProgress(
+      10,
+      'Connecting to email service...'
+    );
+
+
+    /*
+      Call the secured Edge Function.
+    */
+
+    const response =
+      await fetch(
+        `${SUPABASE_URL}/functions/v1/send-batch-tickets`,
+        {
+
+          method: 'POST',
+
+          headers: {
+
+            'Content-Type':
+              'application/json',
+
+            'Authorization':
+              `Bearer ${session.access_token}`
+
+          },
+
+          body: JSON.stringify({
+
+            event_id:
+              eventId,
+
+            batch:
+              batch
+
+          })
+
+        }
+      );
+
+
+    updateProgress(
+      60,
+      'Processing email results...'
+    );
+
+
+    const result =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      console.error(
+        'Batch send error:',
+        result
+      );
+
+      throw new Error(
+        result.error ||
+        'Batch email sending failed.'
+      );
+
+    }
+
+
+    updateProgress(
+      100,
+      'Batch email sending completed.'
+    );
+
+
+    showToast(
+      `Completed: ${result.sent || 0} sent, ${result.failed || 0} failed, ${result.skipped || 0} skipped.`,
+      result.failed > 0
+        ? 'info'
+        : 'success'
+    );
+
+
+    /*
+      Reload data from Supabase.
+    */
+
+    await loadParticipants(
+      eventId
+    );
+
+
+  }
+  catch (error) {
+
+    console.error(error);
+
+    updateProgress(
+      0,
+      'Sending failed.'
+    );
+
+
+    showToast(
+      error.message ||
+      'Batch sending failed.',
+      'error'
+    );
+
+  }
+  finally {
+
+    sendButton.disabled =
+      false;
+
+    sendButton.textContent =
+      'Send Pending Tickets';
+
+  }
+
+}
+
+
+/* =========================================================
+   PROGRESS DISPLAY
+========================================================= */
+
+function showProgress(
+  total
+) {
+
+  const container =
+    document.getElementById(
+      'progressContainer'
+    );
+
+
+  container.style.display =
+    'block';
+
+
+  updateProgress(
+    0,
+    `Preparing to send ${total} ticket(s)...`
+  );
+
+}
+
+
+function updateProgress(
+  percent,
+  text
+) {
+
+  document.getElementById(
+    'progressBar'
+  ).style.width =
+    `${percent}%`;
+
+
+  document.getElementById(
+    'progressPercent'
+  ).textContent =
+    `${percent}%`;
+
+
+  document.getElementById(
+    'progressText'
+  ).textContent =
+    text;
+
+}
+
+
+/* =========================================================
+   RESET BULK PANEL
+========================================================= */
+
+function resetBulkPanel() {
+
+  document.getElementById(
+    'bulkBatchSelect'
+  ).innerHTML =
+    '<option value="">Select a batch</option>';
+
+
+  document.getElementById(
+    'batchTotal'
+  ).textContent =
+    '0';
+
+
+  document.getElementById(
+    'batchSent'
+  ).textContent =
+    '0';
+
+
+  document.getElementById(
+    'batchPending'
+  ).textContent =
+    '0';
+
+
+  document.getElementById(
+    'batchFailed'
+  ).textContent =
+    '0';
+
+
+  document.getElementById(
+    'bulkInfo'
+  ).textContent =
+    'Select a batch to view email status.';
+
+
+  document.getElementById(
+    'bulkSendBtn'
+  ).disabled =
+    true;
+
+
+  document.getElementById(
+    'progressContainer'
+  ).style.display =
+    'none';
 
 }
 
@@ -1651,10 +2771,6 @@ function applyFilters() {
     participants.filter(
       participant => {
 
-        /*
-          Search
-        */
-
         const searchMatch =
           !search ||
           String(
@@ -1681,10 +2797,6 @@ function applyFilters() {
         }
 
 
-        /*
-          Batch
-        */
-
         if (
           batch &&
           String(
@@ -1696,10 +2808,6 @@ function applyFilters() {
 
         }
 
-
-        /*
-          Email status
-        */
 
         const status =
           participant.ticket
@@ -1717,10 +2825,6 @@ function applyFilters() {
         }
 
 
-        /*
-          Gender
-        */
-
         if (
           gender &&
           String(
@@ -1732,10 +2836,6 @@ function applyFilters() {
 
         }
 
-
-        /*
-          Duplicate email
-        */
 
         if (
           duplicateOnly &&
@@ -1768,7 +2868,9 @@ function applyFilters() {
    RENDER PARTICIPANTS
 ========================================================= */
 
-function renderParticipants(list) {
+function renderParticipants(
+  list
+) {
 
   const tbody =
     document.getElementById(
@@ -1782,7 +2884,9 @@ function renderParticipants(list) {
     `${list.length} participant${list.length === 1 ? '' : 's'}`;
 
 
-  if (!list.length) {
+  if (
+    list.length === 0
+  ) {
 
     renderEmpty(
       'No participants match the selected filters.'
@@ -1800,7 +2904,9 @@ function renderParticipants(list) {
     (participant, index) => {
 
       const tr =
-        document.createElement('tr');
+        document.createElement(
+          'tr'
+        );
 
 
       const email =
@@ -1810,7 +2916,9 @@ function renderParticipants(list) {
 
 
       const isDuplicate =
-        duplicateEmails.has(email);
+        duplicateEmails.has(
+          email
+        );
 
 
       if (isDuplicate) {
@@ -1844,13 +2952,13 @@ function renderParticipants(list) {
           ${index + 1}
         </td>
 
-
         <td>
 
           <div class="name-cell">
 
             ${escapeHtml(
-              participant.full_name || '—'
+              participant.full_name ||
+              '—'
             )}
 
             ${
@@ -1863,55 +2971,54 @@ function renderParticipants(list) {
 
         </td>
 
-
         <td>
 
           <div class="email-cell">
 
             ${escapeHtml(
-              participant.email || '—'
+              participant.email ||
+              '—'
             )}
 
           </div>
 
         </td>
 
-
         <td>
 
           ${escapeHtml(
-            participant.registration_no || '—'
+            participant.registration_no ||
+            '—'
           )}
 
         </td>
 
-
         <td>
 
           ${escapeHtml(
-            participant.batch || '—'
+            participant.batch ||
+            '—'
           )}
 
         </td>
 
-
         <td>
 
           ${escapeHtml(
-            participant.gender || '—'
+            participant.gender ||
+            '—'
           )}
 
         </td>
 
-
         <td>
 
           ${escapeHtml(
-            participant.meal || '—'
+            participant.meal ||
+            '—'
           )}
 
         </td>
-
 
         <td>
 
@@ -1923,24 +3030,26 @@ function renderParticipants(list) {
 
         </td>
 
-
         <td>
 
           ${getStatusBadge(status)}
 
         </td>
 
-
         <td>
 
-          ${getActionButton(participant)}
+          ${getActionButton(
+            participant
+          )}
 
         </td>
 
       `;
 
 
-      tbody.appendChild(tr);
+      tbody.appendChild(
+        tr
+      );
 
     }
   );
@@ -1952,9 +3061,13 @@ function renderParticipants(list) {
    STATUS BADGE
 ========================================================= */
 
-function getStatusBadge(status) {
+function getStatusBadge(
+  status
+) {
 
-  if (status === 'SENT') {
+  if (
+    status === 'SENT'
+  ) {
 
     return `
       <span class="status status-sent">
@@ -1965,7 +3078,9 @@ function getStatusBadge(status) {
   }
 
 
-  if (status === 'PENDING') {
+  if (
+    status === 'PENDING'
+  ) {
 
     return `
       <span class="status status-pending">
@@ -1976,7 +3091,9 @@ function getStatusBadge(status) {
   }
 
 
-  if (status === 'FAILED') {
+  if (
+    status === 'FAILED'
+  ) {
 
     return `
       <span class="status status-failed">
@@ -2000,9 +3117,13 @@ function getStatusBadge(status) {
    ACTION BUTTON
 ========================================================= */
 
-function getActionButton(participant) {
+function getActionButton(
+  participant
+) {
 
-  if (!participant.ticket) {
+  if (
+    !participant.ticket
+  ) {
 
     return `
       <button
@@ -2020,13 +3141,15 @@ function getActionButton(participant) {
     participant.ticket.email_status;
 
 
-  if (status === 'SENT') {
+  if (
+    status === 'SENT'
+  ) {
 
     return `
       <button
         class="action-btn resend-btn"
         onclick="sendTicket(
-          '${participant.ticket.ticket_id}',
+          '${escapeJs(participant.ticket.ticket_id)}',
           true
         )"
       >
@@ -2037,31 +3160,11 @@ function getActionButton(participant) {
   }
 
 
-  if (
-    status === 'PENDING' ||
-    status === 'FAILED'
-  ) {
-
-    return `
-      <button
-        class="action-btn send-btn"
-        onclick="sendTicket(
-          '${participant.ticket.ticket_id}',
-          false
-        )"
-      >
-        Send Ticket
-      </button>
-    `;
-
-  }
-
-
   return `
     <button
       class="action-btn send-btn"
       onclick="sendTicket(
-        '${participant.ticket.ticket_id}',
+        '${escapeJs(participant.ticket.ticket_id)}',
         false
       )"
     >
@@ -2073,7 +3176,7 @@ function getActionButton(participant) {
 
 
 /* =========================================================
-   SEND TICKET
+   INDIVIDUAL SEND
 ========================================================= */
 
 async function sendTicket(
@@ -2081,11 +3184,9 @@ async function sendTicket(
   isResend
 ) {
 
-  /*
-    Confirmation is required for resend.
-  */
-
-  if (isResend) {
+  if (
+    isResend
+  ) {
 
     const confirmed =
       confirm(
@@ -2094,9 +3195,7 @@ async function sendTicket(
 
 
     if (!confirmed) {
-
       return;
-
     }
 
   }
@@ -2112,10 +3211,6 @@ async function sendTicket(
     );
 
 
-    /*
-      Get the latest authenticated session.
-    */
-
     const {
       data: {
         session
@@ -2130,32 +3225,18 @@ async function sendTicket(
       !session
     ) {
 
-      showToast(
-        'Your login session has expired. Please log in again.',
-        'error'
+      throw new Error(
+        'Your login session has expired.'
       );
-
-      setTimeout(
-        () => {
-          window.location.href =
-            'admin.html';
-        },
-        1500
-      );
-
-      return;
 
     }
 
-
-    /*
-      Call the secured Edge Function.
-    */
 
     const response =
       await fetch(
         `${SUPABASE_URL}/functions/v1/send-ticket-email`,
         {
+
           method: 'POST',
 
           headers: {
@@ -2169,7 +3250,8 @@ async function sendTicket(
           },
 
           body: JSON.stringify({
-            ticket_id: ticketId
+            ticket_id:
+              ticketId
           })
 
         }
@@ -2180,13 +3262,9 @@ async function sendTicket(
       await response.json();
 
 
-    if (!response.ok) {
-
-      console.error(
-        'Send ticket error:',
-        result
-      );
-
+    if (
+      !response.ok
+    ) {
 
       throw new Error(
         result.error ||
@@ -2196,31 +3274,6 @@ async function sendTicket(
     }
 
 
-    /*
-      Update local participant data.
-    */
-
-    const participant =
-      participants.find(
-        p =>
-          p.ticket &&
-          p.ticket.ticket_id === ticketId
-      );
-
-
-    if (participant && participant.ticket) {
-
-      participant.ticket.email_status =
-        'SENT';
-
-    }
-
-
-    updateStatistics();
-
-    applyFilters();
-
-
     showToast(
       isResend
         ? 'Ticket resent successfully.'
@@ -2228,8 +3281,18 @@ async function sendTicket(
       'success'
     );
 
-  }
 
+    const eventId =
+      document.getElementById(
+        'eventSelect'
+      ).value;
+
+
+    await loadParticipants(
+      eventId
+    );
+
+  }
   catch (error) {
 
     console.error(error);
@@ -2240,44 +3303,20 @@ async function sendTicket(
       'error'
     );
 
-
-    /*
-      Reload data so FAILED status
-      from the Edge Function is reflected.
-    */
-
-    const eventId =
-      document.getElementById(
-        'eventSelect'
-      ).value;
-
-
-    if (eventId) {
-
-      await loadParticipants(
-        eventId
-      );
-
-    }
-
   }
 
 }
 
 
 /* =========================================================
-   SHOW LOADING
+   LOADING
 ========================================================= */
 
 function showLoading() {
 
-  const tbody =
-    document.getElementById(
-      'participantsTable'
-    );
-
-
-  tbody.innerHTML = `
+  document.getElementById(
+    'participantsTable'
+  ).innerHTML = `
 
     <tr>
 
@@ -2307,18 +3346,16 @@ function showLoading() {
 
 
 /* =========================================================
-   EMPTY TABLE
+   EMPTY
 ========================================================= */
 
-function renderEmpty(message) {
+function renderEmpty(
+  message
+) {
 
-  const tbody =
-    document.getElementById(
-      'participantsTable'
-    );
-
-
-  tbody.innerHTML = `
+  document.getElementById(
+    'participantsTable'
+  ).innerHTML = `
 
     <tr>
 
@@ -2326,7 +3363,9 @@ function renderEmpty(message) {
 
         <div class="empty">
 
-          ${escapeHtml(message)}
+          ${escapeHtml(
+            message
+          )}
 
         </div>
 
@@ -2349,7 +3388,9 @@ function renderEmpty(message) {
    ESCAPE HTML
 ========================================================= */
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
   return String(
     value ?? ''
@@ -2373,6 +3414,37 @@ function escapeHtml(value) {
     .replace(
       /'/g,
       '&#039;'
+    );
+
+}
+
+
+/* =========================================================
+   ESCAPE JAVASCRIPT STRING
+========================================================= */
+
+function escapeJs(
+  value
+) {
+
+  return String(
+    value ?? ''
+  )
+    .replace(
+      /\\/g,
+      '\\\\'
+    )
+    .replace(
+      /'/g,
+      "\\'"
+    )
+    .replace(
+      /\r/g,
+      '\\r'
+    )
+    .replace(
+      /\n/g,
+      '\\n'
     );
 
 }
@@ -2421,7 +3493,7 @@ function showToast(
           'none';
 
       },
-      4000
+      5000
     );
 
 }
@@ -2440,9 +3512,7 @@ async function logout() {
 
 
   if (!confirmed) {
-
     return;
-
   }
 
 
@@ -2465,11 +3535,14 @@ async function logout() {
 
 
 /* =========================================================
-   AUTH STATE CHANGE
+   AUTH STATE
 ========================================================= */
 
 supabaseClient.auth.onAuthStateChange(
-  (event, session) => {
+  (
+    event,
+    session
+  ) => {
 
     if (
       event === 'SIGNED_OUT'
