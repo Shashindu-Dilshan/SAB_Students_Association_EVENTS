@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>SABSA E-Ticket Admin Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+
+      position: fixed;
+
+      left: 0;
+      top: 0;
+      bottom: 0;
+
+      width: 240px;
+
+      background: #111827;
+
+      color: white;
+
+      padding: 25px 15px;
+
+      z-index: 1000;
+    }
+
+
+    .brand {
+
+      text-align: center;
+
+      padding-bottom: 25px;
+
+      border-bottom: 1px solid #374151;
+
+      margin-bottom: 20px;
+    }
+
+
+    .brand img {
+
+      max-width: 150px;
+
+      max-height: 65px;
+
+      object-fit: contain;
+
+      background: white;
+
+      padding: 8px;
+
+      border-radius: 8px;
+
+      margin-bottom: 12px;
+    }
+
+
+    .brand-title {
+
+      font-size: 17px;
+
+      font-weight: bold;
+    }
+
+
+    .brand-subtitle {
+
+      margin-top: 5px;
+
+      font-size: 11px;
+
+      color: #9ca3af;
+    }
+
+
+    .nav-item {
+
+      width: 100%;
+
+      padding: 13px 15px;
+
+      margin-bottom: 6px;
+
+      border: none;
+
+      border-radius: 8px;
+
+      background: transparent;
+
+      color: #d1d5db;
+
+      text-align: left;
+
+      font-size: 14px;
+
+      cursor: pointer;
+    }
+
+
+    .nav-item:hover {
+
+      background: #1f2937;
+
+      color: white;
+    }
+
+
+    .nav-item.active {
+
+      background: #374151;
+
+      color: white;
+
+      font-weight: bold;
+    }
+
+
+    .logout {
+
+      position: absolute;
+
+      left: 15px;
+
+      right: 15px;
+
+      bottom: 25px;
+
+      padding: 12px;
+
+      border: 1px solid #4b5563;
+
+      border-radius: 8px;
+
+      background: transparent;
+
+      color: #d1d5db;
+
+      cursor: pointer;
+    }
+
+
+    .logout:hover {
+
+      background: #374151;
+
+      color: white;
+    }
+
+
+    /* =====================================================
+       MAIN
+    ===================================================== */
+
+    .main {
+
+      margin-left: 240px;
+
+      min-height: 100vh;
+
+      padding: 30px;
+    }
+
+
+    .topbar {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-bottom: 30px;
+    }
+
+
+    .page-title {
+
+      margin: 0;
+
+      font-size: 28px;
+    }
+
+
+    .page-subtitle {
+
+      margin-top: 6px;
+
+      color: #6b7280;
+
+      font-size: 14px;
+    }
+
+
+    .admin-user {
+
+      background: white;
+
+      padding: 10px 15px;
+
+      border-radius: 9px;
+
+      border: 1px solid #e5e7eb;
+
+      font-size: 13px;
+
+      color: #374151;
+    }
+
+
+    /* =====================================================
+       STAT CARDS
+    ===================================================== */
+
+    .stats {
+
+      display: grid;
+
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+      gap: 20px;
+
+      margin-bottom: 30px;
+    }
+
+
+    .stat-card {
+
+      background: white;
+
+      border-radius: 14px;
+
+      padding: 22px;
+
+      border: 1px solid #e5e7eb;
+
+      box-shadow:
+        0 3px 10px rgba(0,0,0,0.03);
+    }
+
+
+    .stat-label {
+
+      color: #6b7280;
+
+      font-size: 13px;
+
+      margin-bottom: 10px;
+    }
+
+
+    .stat-value {
+
+      font-size: 30px;
+
+      font-weight: bold;
+
+      color: #111827;
+    }
+
+
+    .stat-description {
+
+      margin-top: 8px;
+
+      color: #9ca3af;
+
+      font-size: 12px;
+    }
+
+
+    /* =====================================================
+       CONTENT GRID
+    ===================================================== */
+
+    .content-grid {
+
+      display: grid;
+
+      grid-template-columns:
+        1.4fr
+        1fr;
+
+      gap: 20px;
+    }
+
+
+    .card {
+
+      background: white;
+
+      border: 1px solid #e5e7eb;
+
+      border-radius: 14px;
+
+      padding: 25px;
+
+      box-shadow:
+        0 3px 10px rgba(0,0,0,0.03);
+    }
+
+
+    .card-header {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-bottom: 20px;
+    }
+
+
+    .card-title {
+
+      margin: 0;
+
+      font-size: 18px;
+    }
+
+
+    .event-card {
+
+      border: 1px solid #e5e7eb;
+
+      border-radius: 10px;
+
+      padding: 18px;
+
+      margin-bottom: 12px;
+    }
+
+
+    .event-name {
+
+      font-weight: bold;
+
+      font-size: 17px;
+
+      margin-bottom: 10px;
+    }
+
+
+    .event-detail {
+
+      color: #6b7280;
+
+      font-size: 13px;
+
+      margin-top: 5px;
+    }
+
+
+    /* =====================================================
+       TABLE
+    ===================================================== */
+
+    .table-container {
+
+      overflow-x: auto;
+    }
+
+
+    table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+    }
+
+
+    th {
+
+      text-align: left;
+
+      padding: 12px;
+
+      font-size: 11px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.8px;
+
+      color: #6b7280;
+
+      background: #f9fafb;
+
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+
+    td {
+
+      padding: 13px 12px;
+
+      font-size: 13px;
+
+      border-bottom: 1px solid #f0f0f0;
+
+      color: #374151;
+    }
+
+
+    .status {
+
+      display: inline-block;
+
+      padding: 5px 9px;
+
+      border-radius: 20px;
+
+      font-size: 11px;
+
+      font-weight: bold;
+    }
+
+
+    .status.sent {
+
+      background: #dcfce7;
+
+      color: #166534;
+    }
+
+
+    .status.pending {
+
+      background: #fef3c7;
+
+      color: #92400e;
+    }
+
+
+    .status.failed {
+
+      background: #fee2e2;
+
+      color: #991b1b;
+    }
+
+
+    .status.active {
+
+      background: #dbeafe;
+
+      color: #1e40af;
+    }
+
+
+    .status.used {
+
+      background: #dcfce7;
+
+      color: #166534;
+    }
+
+
+    /* =====================================================
+       LOADING
+    ===================================================== */
+
+    .loading {
+
+      text-align: center;
+
+      padding: 40px;
+
+      color: #6b7280;
+    }
+
+
+    .error-box {
+
+      background: #fee2e2;
+
+      color: #991b1b;
+
+      padding: 15px;
+
+      border-radius: 8px;
+
+      margin-bottom: 20px;
+
+      display: none;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+
+    @media (max-width: 1000px) {
+
+      .stats {
+
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .content-grid {
+
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+
+    @media (max-width: 700px) {
+
+      .sidebar {
+
+        position: relative;
+
+        width: 100%;
+
+        height: auto;
+      }
+
+
+      .main {
+
+        margin-left: 0;
+
+        padding: 20px;
+      }
+
+
+      .logout {
+
+        position: static;
+
+        width: 100%;
+
+        margin-top: 15px;
+      }
+
+
+      .stats {
+
+        grid-template-columns: 1fr;
+      }
+
+
+      .topbar {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 15px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     SIDEBAR
+===================================================== -->
+
+<aside class="sidebar">
+
+
+  <div class="brand">
+
+    <img
+      src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+      alt="SABSA"
+    >
+
+    <div class="brand-title">
+      SABSA E-Ticket
+    </div>
+
+    <div class="brand-subtitle">
+      Administration Panel
+    </div>
+
+  </div>
+
+
+  <button
+    class="nav-item active"
+    onclick="showDashboard()"
+  >
+    Dashboard
+  </button>
+
+
+  <button
+    class="nav-item"
+    onclick="showComingSoon('Participants')"
+  >
+    Participants
+  </button>
+
+
+  <button
+    class="nav-item"
+    onclick="showComingSoon('Tickets')"
+  >
+    Tickets
+  </button>
+
+
+  <button
+    class="nav-item"
+    onclick="showComingSoon('Event Management')"
+  >
+    Event
+  </button>
+
+
+  <button
+    class="nav-item"
+    onclick="openScanner()"
+  >
+    Scanner
+  </button>
+
+
+  <button
+    class="nav-item"
+    onclick="showComingSoon('Settings')"
+  >
+    Settings
+  </button>
+
+
+  <button
+    class="logout"
+    onclick="logout()"
+  >
+    Logout
+  </button>
+
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="main">
+
+
+  <div class="topbar">
+
+    <div>
+
+      <h1 class="page-title">
+        Dashboard
+      </h1>
+
+      <div class="page-subtitle">
+        SAB Students' Association E-Ticket System
+      </div>
+
+    </div>
+
+
+    <div
+      class="admin-user"
+      id="adminUser"
+    >
+      Loading...
+    </div>
+
+  </div>
+
+
+  <div
+    id="errorBox"
+    class="error-box"
+  ></div>
+
+
+
+  <!-- ===================================================
+       STATISTICS
+  =================================================== -->
+
+  <div class="stats">
+
+
+    <div class="stat-card">
+
+      <div class="stat-label">
+        Total Registrations
+      </div>
+
+      <div
+        class="stat-value"
+        id="totalParticipants"
+      >
+        -
+      </div>
+
+      <div class="stat-description">
+        Registered participants
+      </div>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+      <div class="stat-label">
+        Tickets Sent
+      </div>
+
+      <div
+        class="stat-value"
+        id="ticketsSent"
+      >
+        -
+      </div>
+
+      <div class="stat-description">
+        Email status: SENT
+      </div>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+      <div class="stat-label">
+        Emails Pending
+      </div>
+
+      <div
+        class="stat-value"
+        id="ticketsPending"
+      >
+        -
+      </div>
+
+      <div class="stat-description">
+        Waiting to be sent
+      </div>
+
+    </div>
+
+
+
+    <div class="stat-card">
+
+      <div class="stat-label">
+        Attendance
+      </div>
+
+      <div
+        class="stat-value"
+        id="attendanceCount"
+      >
+        -
+      </div>
+
+      <div class="stat-description">
+        Tickets scanned
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       CONTENT
+  =================================================== -->
+
+  <div class="content-grid">
+
+
+    <!-- EVENT -->
+
+    <div class="card">
+
+      <div class="card-header">
+
+        <h2 class="card-title">
+          Current Event
+        </h2>
+
+      </div>
+
+      <div id="eventContainer">
+
+        <div class="loading">
+          Loading event...
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- QUICK INFO -->
+
+    <div class="card">
+
+      <div class="card-header">
+
+        <h2 class="card-title">
+          Ticket Summary
+        </h2>
+
+      </div>
+
+
+      <div
+        id="ticketSummary"
+        class="loading"
+      >
+        Loading...
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+
+  <!-- ===================================================
+       RECENT REGISTRATIONS
+  =================================================== -->
+
+  <div
+    class="card"
+    style="margin-top:20px;"
+  >
+
+    <div class="card-header">
+
+      <h2 class="card-title">
+        Recent Registrations
+      </h2>
+
+    </div>
+
+
+    <div class="table-container">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Name
+            </th>
+
+            <th>
+              Registration No.
+            </th>
+
+            <th>
+              Batch
+            </th>
+
+            <th>
+              Ticket ID
+            </th>
+
+            <th>
+              Email
+            </th>
+
+            <th>
+              Status
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="recentTable">
+
+          <tr>
+
+            <td
+              colspan="6"
+              class="loading"
+            >
+              Loading...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+</main>
+
+
+
+<script>
+
+// =========================================================
+// SUPABASE CONFIGURATION
+// =========================================================
+
+const SUPABASE_URL =
+  "https://xdaxxgsvorvfpnxteikv.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_wRysyx1ek-J7XrFOLxXfnA_Fp_0UsFO";
+
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+
+// =========================================================
+// INITIALIZE
+// =========================================================
+
+async function initializeDashboard() {
+
+  try {
+
+    // -----------------------------------------------------
+    // Check session
+    // -----------------------------------------------------
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (sessionError) {
+      throw sessionError;
+    }
+
+
+    if (!sessionData.session) {
+
+      window.location.href =
+        "admin.html";
+
+      return;
+    }
+
+
+    const user =
+      sessionData.session.user;
+
+
+    // -----------------------------------------------------
+    // Check admin
+    // -----------------------------------------------------
+
+    const {
+      data: admin,
+      error: adminError
+    } =
+      await supabaseClient
+        .from("admins")
+        .select(
+          "id, email, role"
+        )
+        .eq(
+          "id",
+          user.id
+        )
+        .maybeSingle();
+
+
+    if (adminError) {
+      throw adminError;
+    }
+
+
+    if (!admin) {
+
+      await supabaseClient.auth
+        .signOut();
+
+      window.location.href =
+        "admin.html";
+
+      return;
+    }
+
+
+    // -----------------------------------------------------
+    // Display admin
+    // -----------------------------------------------------
+
+    document
+      .getElementById("adminUser")
+      .textContent =
+        `${admin.email} • ${admin.role}`;
+
+
+    // -----------------------------------------------------
+    // Load dashboard
+    // -----------------------------------------------------
+
+    await loadDashboard();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    showError(
+      error.message ||
+      "Unable to load dashboard."
+    );
+
+  }
+
+}
+
+
+// =========================================================
+// LOAD DASHBOARD
+// =========================================================
+
+async function loadDashboard() {
+
+  // -------------------------------------------------------
+  // Participants
+  // -------------------------------------------------------
+
+  const {
+    data: participants,
+    error: participantError
+  } =
+    await supabaseClient
+      .from("participants")
+      .select(`
+        id,
+        full_name,
+        registration_no,
+        batch,
+        created_at,
+        tickets (
+          ticket_id,
+          ticket_status,
+          email_status
+        )
+      `)
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
+
+
+  if (participantError) {
+    throw participantError;
+  }
+
+
+  const totalParticipants =
+    participants.length;
+
+
+  // -------------------------------------------------------
+  // Tickets
+  // -------------------------------------------------------
+
+  let ticketsSent = 0;
+
+  let ticketsPending = 0;
+
+  let ticketsFailed = 0;
+
+  let activeTickets = 0;
+
+  let usedTickets = 0;
+
+
+  participants.forEach(
+    participant => {
+
+      const ticket =
+        participant.tickets?.[0];
+
+
+      if (!ticket) {
+        return;
+      }
+
+
+      if (
+        ticket.email_status ===
+        "SENT"
+      ) {
+
+        ticketsSent++;
+
+      }
+
+
+      if (
+        ticket.email_status ===
+        "PENDING"
+      ) {
+
+        ticketsPending++;
+
+      }
+
+
+      if (
+        ticket.email_status ===
+        "FAILED"
+      ) {
+
+        ticketsFailed++;
+
+      }
+
+
+      if (
+        ticket.ticket_status ===
+        "ACTIVE"
+      ) {
+
+        activeTickets++;
+
+      }
+
+
+      if (
+        ticket.ticket_status ===
+        "USED"
+      ) {
+
+        usedTickets++;
+
+      }
+
+    }
+  );
+
+
+  // -------------------------------------------------------
+  // Attendance
+  // -------------------------------------------------------
+
+  const {
+    count: attendanceCount,
+    error: attendanceError
+  } =
+    await supabaseClient
+      .from("attendance")
+      .select(
+        "id",
+        {
+          count: "exact",
+          head: true
+        }
+      );
+
+
+  if (attendanceError) {
+    throw attendanceError;
+  }
+
+
+  // -------------------------------------------------------
+  // Display statistics
+  // -------------------------------------------------------
+
+  document
+    .getElementById(
+      "totalParticipants"
+    )
+    .textContent =
+      totalParticipants;
+
+
+  document
+    .getElementById(
+      "ticketsSent"
+    )
+    .textContent =
+      ticketsSent;
+
+
+  document
+    .getElementById(
+      "ticketsPending"
+    )
+    .textContent =
+      ticketsPending;
+
+
+  document
+    .getElementById(
+      "attendanceCount"
+    )
+    .textContent =
+      attendanceCount || 0;
+
+
+  // -------------------------------------------------------
+  // Ticket summary
+  // -------------------------------------------------------
+
+  document
+    .getElementById(
+      "ticketSummary"
+    )
+    .innerHTML = `
+
+      <div style="
+        padding:15px;
+        background:#f9fafb;
+        border-radius:9px;
+        margin-bottom:10px;
+      ">
+
+        <strong>
+          ${activeTickets}
+        </strong>
+
+        Active Tickets
+
+      </div>
+
+
+      <div style="
+        padding:15px;
+        background:#f9fafb;
+        border-radius:9px;
+        margin-bottom:10px;
+      ">
+
+        <strong>
+          ${usedTickets}
+        </strong>
+
+        Used Tickets
+
+      </div>
+
+
+      <div style="
+        padding:15px;
+        background:#f9fafb;
+        border-radius:9px;
+        margin-bottom:10px;
+      ">
+
+        <strong>
+          ${ticketsFailed}
+        </strong>
+
+        Failed Emails
+
+      </div>
+
+    `;
+
+
+  // -------------------------------------------------------
+  // Recent registrations
+  // -------------------------------------------------------
+
+  renderRecentParticipants(
+    participants.slice(0, 10)
+  );
+
+
+  // -------------------------------------------------------
+  // Event
+  // -------------------------------------------------------
+
+  await loadEvent();
+
+}
+
+
+// =========================================================
+// LOAD EVENT
+// =========================================================
+
+async function loadEvent() {
+
+  const {
+    data: events,
+    error
+  } =
+    await supabaseClient
+      .from("events")
+      .select(`
+        id,
+        event_name,
+        event_code,
+        event_date,
+        event_time,
+        venue,
+        description,
+        logo_url,
+        registration_open,
+        scanner_enabled
+      `)
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      )
+      .limit(1);
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  const container =
+    document.getElementById(
+      "eventContainer"
+    );
+
+
+  if (!events || events.length === 0) {
+
+    container.innerHTML = `
+      <div class="loading">
+        No event found.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  const event =
+    events[0];
+
+
+  let formattedDate =
+    event.event_date || "-";
+
+
+  if (event.event_date) {
+
+    try {
+
+      formattedDate =
+        new Date(
+          event.event_date +
+          "T00:00:00"
+        ).toLocaleDateString(
+          "en-GB",
+          {
+            day: "2-digit",
+            month: "long",
+            year: "numeric"
+          }
+        );
+
+    } catch {
+      formattedDate =
+        event.event_date;
+    }
+
+  }
+
+
+  const registrationStatus =
+    event.registration_open
+      ? "OPEN"
+      : "CLOSED";
+
+
+  const scannerStatus =
+    event.scanner_enabled
+      ? "ENABLED"
+      : "DISABLED";
+
+
+  container.innerHTML = `
+
+    <div class="event-card">
+
+      <div class="event-name">
+        ${escapeHtml(
+          event.event_name
+        )}
+      </div>
+
+
+      <div class="event-detail">
+
+        <strong>
+          Event Code:
+        </strong>
+
+        ${escapeHtml(
+          event.event_code
+        )}
+
+      </div>
+
+
+      <div class="event-detail">
+
+        <strong>
+          Date:
+        </strong>
+
+        ${escapeHtml(
+          formattedDate
+        )}
+
+      </div>
+
+
+      <div class="event-detail">
+
+        <strong>
+          Time:
+        </strong>
+
+        ${escapeHtml(
+          event.event_time ||
+          "-"
+        )}
+
+      </div>
+
+
+      <div class="event-detail">
+
+        <strong>
+          Venue:
+        </strong>
+
+        ${escapeHtml(
+          event.venue ||
+          "-"
+        )}
+
+      </div>
+
+
+      <div style="
+        margin-top:15px;
+      ">
+
+        <span
+          class="status ${
+            event.registration_open
+              ? "active"
+              : "failed"
+          }"
+        >
+
+          Registration:
+          ${registrationStatus}
+
+        </span>
+
+
+        <span
+          class="status ${
+            event.scanner_enabled
+              ? "active"
+              : "failed"
+          }"
+          style="
+            margin-left:6px;
+          "
+        >
+
+          Scanner:
+          ${scannerStatus}
+
+        </span>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+// =========================================================
+// RECENT PARTICIPANTS
+// =========================================================
+
+function renderRecentParticipants(
+  participants
+) {
+
+  const tbody =
+    document.getElementById(
+      "recentTable"
+    );
+
+
+  if (
+    !participants ||
+    participants.length === 0
+  ) {
+
+    tbody.innerHTML = `
+
+      <tr>
+
+        <td
+          colspan="6"
+          style="
+            text-align:center;
+            padding:30px;
+            color:#6b7280;
+          "
+        >
+
+          No registrations yet.
+
+        </td>
+
+      </tr>
+
+    `;
+
+    return;
+  }
+
+
+  tbody.innerHTML =
+    participants
+      .map(
+        participant => {
+
+          const ticket =
+            participant.tickets?.[0];
+
+
+          const emailStatus =
+            ticket?.email_status ||
+            "PENDING";
+
+
+          let statusClass =
+            "pending";
+
+
+          if (
+            emailStatus ===
+            "SENT"
+          ) {
+
+            statusClass =
+              "sent";
+
+          }
+
+
+          if (
+            emailStatus ===
+            "FAILED"
+          ) {
+
+            statusClass =
+              "failed";
+
+          }
+
+
+          return `
+
+            <tr>
+
+              <td>
+                ${escapeHtml(
+                  participant.full_name
+                )}
+              </td>
+
+
+              <td>
+                ${escapeHtml(
+                  participant.registration_no
+                )}
+              </td>
+
+
+              <td>
+                ${escapeHtml(
+                  participant.batch ||
+                  "-"
+                )}
+              </td>
+
+
+              <td>
+
+                ${
+                  ticket
+                    ? escapeHtml(
+                        ticket.ticket_id
+                      )
+                    : "-"
+                }
+
+              </td>
+
+
+              <td>
+
+                <span
+                  class="status ${statusClass}"
+                >
+
+                  ${emailStatus}
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <span
+                  class="status ${
+                    ticket?.ticket_status ===
+                    "ACTIVE"
+                      ? "active"
+                      : "pending"
+                  }"
+                >
+
+                  ${
+                    ticket?.ticket_status ||
+                    "NO TICKET"
+                  }
+
+                </span>
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+      .join("");
+
+}
+
+
+// =========================================================
+// LOGOUT
+// =========================================================
+
+async function logout() {
+
+  await supabaseClient.auth
+    .signOut();
+
+  window.location.href =
+    "admin.html";
+
+}
+
+
+// =========================================================
+// SCANNER
+// =========================================================
+
+function openScanner() {
+
+  window.location.href =
+    "scanner.html";
+
+}
+
+
+// =========================================================
+// COMING SOON
+// =========================================================
+
+function showComingSoon(
+  section
+) {
+
+  alert(
+    `${section} management will be added in the next stage.`
+  );
+
+}
+
+
+// =========================================================
+// DASHBOARD
+// =========================================================
+
+function showDashboard() {
+
+  window.location.reload();
+
+}
+
+
+// =========================================================
+// ERROR
+// =========================================================
+
+function showError(
+  message
+) {
+
+  const box =
+    document.getElementById(
+      "errorBox"
+    );
+
+
+  box.textContent =
+    message;
+
+
+  box.style.display =
+    "block";
+
+}
+
+
+// =========================================================
+// HTML ESCAPING
+// =========================================================
+
+function escapeHtml(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return "";
+
+  }
+
+
+  return String(value)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+// =========================================================
+// START
+// =========================================================
+
+initializeDashboard();
+
+</script>
+
+
+</body>
+
+</html>
