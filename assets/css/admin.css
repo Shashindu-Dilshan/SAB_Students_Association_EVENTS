@@ -895,3 +895,145 @@ tbody tr:hover {
   }
 
 }
+/* =========================================================
+   DASHBOARD-SPECIFIC COMMON COMPONENTS
+========================================================= */
+
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    color: var(--text);
+}
+
+
+.page-subtitle {
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+
+.admin-user {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: #374151;
+}
+
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 20px;
+}
+
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+
+.stat-value {
+    font-size: 30px;
+    font-weight: bold;
+    color: var(--text);
+}
+
+
+.stat-description {
+    margin-top: 8px;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+
+.error-box {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+
+.event-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 12px;
+}
+
+
+.event-name {
+    font-weight: bold;
+    font-size: 17px;
+    margin-bottom: 10px;
+}
+
+
+.event-detail {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 5px;
+}
+@media (max-width: 1000px) {
+
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+}
+/* Dashboard status compatibility */
+
+.status.sent {
+    background: #dcfce7;
+    color: #166534;
+}
+
+
+.status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+
+.status.failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+.status.active {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+
+.status.used {
+    background: #dcfce7;
+    color: #166534;
+}
