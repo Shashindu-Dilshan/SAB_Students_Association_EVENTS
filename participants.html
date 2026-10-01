@@ -12,8 +12,6 @@
 <link rel="stylesheet" 
   href="assets/css/admin.css">
   <title>Participants | SABSA E-Ticket System</title>
-  <link rel="stylesheet"
-    href="assets/css/admin.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -863,7 +861,7 @@
             Select Event
         </label>
 
-        <select id="eventSelect">
+        <select id="eventSelect" onchange="eventChanged()">
             <!-- Existing JavaScript fills this -->
         </select>
 
@@ -2157,33 +2155,19 @@ function updateStatistics() {
   );
 
 
-  document.getElementById(
-    'totalCount'
-  ).textContent =
+  document.getElementById('totalParticipants').textContent =
     participants.length;
 
-
-  document.getElementById(
-    'pendingCount'
-  ).textContent =
+document.getElementById('pendingEmails').textContent =
     pending;
 
-
-  document.getElementById(
-    'sentCount'
-  ).textContent =
+document.getElementById('sentEmails').textContent =
     sent;
 
-
-  document.getElementById(
-    'failedCount'
-  ).textContent =
+document.getElementById('failedEmails').textContent =
     failed;
 
-
-  document.getElementById(
-    'duplicateCount'
-  ).textContent =
+document.getElementById('duplicateEmails').textContent =
     duplicateEmails.size;
 
 }
