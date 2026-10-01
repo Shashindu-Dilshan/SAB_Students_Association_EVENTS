@@ -12,6 +12,8 @@
 <link rel="stylesheet" 
   href="assets/css/admin.css">
   <title>Participants | SABSA E-Ticket System</title>
+  <link rel="stylesheet"
+    href="assets/css/admin.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -762,67 +764,68 @@
 
 <aside class="sidebar">
 
-  <div class="logo-area">
+    <div class="logo-area">
 
-    <img
-      src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
-      alt="SABSA Logo"
+        <img
+            src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+            alt="SABSA Logo"
+        >
+
+        <h2>SABSA E-Ticket</h2>
+
+        <p>Administration Panel</p>
+
+    </div>
+
+
+    <nav class="nav-menu">
+
+        <a
+            href="admin-dashboard.html"
+        >
+            Dashboard
+        </a>
+
+        <a
+            href="participants.html"
+            class="active"
+        >
+            Participants
+        </a>
+
+        <a
+            href="tickets.html"
+        >
+            Tickets
+        </a>
+
+        <a
+            href="event.html"
+        >
+            Event
+        </a>
+
+        <a
+            href="scanner.html"
+        >
+            Scanner
+        </a>
+
+        <a
+            href="settings.html"
+        >
+            Settings
+        </a>
+
+    </nav>
+
+
+    <button
+        class="logout-btn"
+        onclick="logout()"
     >
-
-    <h2>SABSA</h2>
-
-    <p>E-Ticket System</p>
-
-  </div>
-
-
-  <ul class="nav-menu">
-
-    <li>
-      <a href="admin-dashboard.html">
-        Dashboard
-      </a>
-    </li>
-
-    <li>
-      <a href="participants.html" class="active">
-        Participants
-      </a>
-    </li>
-
-    <li>
-      <a href="scanner.html">
-        Scanner
-      </a>
-    </li>
-
-    <li>
-      <a href="admin-dashboard.html">
-        Tickets
-      </a>
-    </li>
-
-    <li>
-      <a href="admin-dashboard.html">
-        Event
-      </a>
-    </li>
-
-    <li>
-      <a href="admin-dashboard.html">
-        Settings
-      </a>
-    </li>
-
-  </ul>
-
-
-  <button
-    class="logout-btn"
-    onclick="logout()"
-  >
-    Logout
-  </button>
+        Logout
+    </button>
 
 </aside>
 
