@@ -838,142 +838,116 @@
 
 
   <div class="page-header">
-
     <div>
-
-      <h1>
-        Participants
-      </h1>
-
-      <p>
-        Manage registrations and send electronic tickets.
-      </p>
-
+        <h1 class="page-title">Participants</h1>
+        <p class="page-subtitle">
+            Manage registrations and send electronic tickets.
+        </p>
     </div>
 
-
-    <a
-      href="admin-dashboard.html"
-      class="back-btn"
-    >
-      ← Dashboard
+    <a href="admin-dashboard.html" class="back-btn">
+        ← Dashboard
     </a>
-
-  </div>
+</div>
 
 
   <!-- ===================================================
        EVENT SELECTOR
   =================================================== -->
 
-  <div class="event-card">
+  <div class="card">
 
-    <label for="eventSelect">
-      Select Event
-    </label>
+    <div class="form-group">
 
-    <select
-      id="eventSelect"
-      onchange="eventChanged()"
-    >
+        <label for="eventSelect">
+            Select Event
+        </label>
 
-      <option value="">
-        Loading events...
-      </option>
+        <select id="eventSelect">
+            <!-- Existing JavaScript fills this -->
+        </select>
 
-    </select>
+    </div>
 
-  </div>
+</div>
 
 
   <!-- ===================================================
        GENERAL STATISTICS
   =================================================== -->
 
-  <div class="stats">
+<div class="stats">
 
+    <div class="stat-card stat-blue">
+        <div class="stat-label">
+            Total Participants
+        </div>
 
-    <div class="stat-card stat-total">
-
-      <div class="label">
-        Total Participants
-      </div>
-
-      <div
-        class="number"
-        id="totalCount"
-      >
-        0
-      </div>
-
+        <div
+            class="stat-value"
+            id="totalParticipants"
+        >
+            0
+        </div>
     </div>
 
 
-    <div class="stat-card stat-pending">
+    <div class="stat-card stat-orange">
+        <div class="stat-label">
+            Pending Emails
+        </div>
 
-      <div class="label">
-        Pending Emails
-      </div>
-
-      <div
-        class="number"
-        id="pendingCount"
-      >
-        0
-      </div>
-
+        <div
+            class="stat-value"
+            id="pendingEmails"
+        >
+            0
+        </div>
     </div>
 
 
-    <div class="stat-card stat-sent">
+    <div class="stat-card stat-green">
+        <div class="stat-label">
+            Emails Sent
+        </div>
 
-      <div class="label">
-        Emails Sent
-      </div>
-
-      <div
-        class="number"
-        id="sentCount"
-      >
-        0
-      </div>
-
+        <div
+            class="stat-value"
+            id="sentEmails"
+        >
+            0
+        </div>
     </div>
 
 
-    <div class="stat-card stat-failed">
+    <div class="stat-card stat-red">
+        <div class="stat-label">
+            Failed Emails
+        </div>
 
-      <div class="label">
-        Failed Emails
-      </div>
-
-      <div
-        class="number"
-        id="failedCount"
-      >
-        0
-      </div>
-
+        <div
+            class="stat-value"
+            id="failedEmails"
+        >
+            0
+        </div>
     </div>
 
 
-    <div class="stat-card stat-duplicate">
+    <div class="stat-card stat-purple">
+        <div class="stat-label">
+            Duplicate Emails
+        </div>
 
-      <div class="label">
-        Duplicate Emails
-      </div>
-
-      <div
-        class="number"
-        id="duplicateCount"
-      >
-        0
-      </div>
-
+        <div
+            class="stat-value"
+            id="duplicateEmails"
+        >
+            0
+        </div>
     </div>
 
-
-  </div>
+</div>
 
 
   <!-- ===================================================
