@@ -1858,22 +1858,23 @@
      * already exists.
      */
 
-    const {
-      data: existingAttendance,
-      error: attendanceCheckError
-    } =
-      await supabaseClient
-        .from('attendance')
-        .select(`
-          id,
-          scanned_at,
-          scanned_by
-        `)
-        .eq(
-          'id',
-          ticket.id
-        )
-        .maybeSingle();
+   const {
+  data: existingAttendance,
+  error: attendanceCheckError
+} =
+  await supabaseClient
+    .from('attendance')
+    .select(`
+      id,
+      ticket_id,
+      scanned_at,
+      scanned_by
+    `)
+    .eq(
+      'ticket_id',
+      ticket.id
+    )
+    .maybeSingle();
 
 
     if (attendanceCheckError) {
