@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tickets | SABSA E-Ticket System</title>
+
+    <link rel="stylesheet" href="assets/css/admin.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* =====================================================
+           TICKETS PAGE
+        ===================================================== */
+
+        .ticket-filter-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            color: #4b5563;
+            margin-bottom: 7px;
+        }
+
+        .ticket-table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .ticket-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1100px;
+        }
+
+        .ticket-table th {
+            background: #f9fafb;
+            text-align: left;
+            padding: 13px 12px;
+            font-size: 12px;
+            color: #4b5563;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        .ticket-table td {
+            padding: 13px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .ticket-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .ticket-id {
+            font-weight: bold;
+            color: #2563eb;
+            white-space: nowrap;
+        }
+
+        .participant-name {
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .registration-number {
+            color: #4b5563;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .ticket-action-btn {
+            border: none;
+            border-radius: 6px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 11px;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .view-btn {
+            background: #374151;
+        }
+
+        .view-btn:hover {
+            background: #1f2937;
+        }
+
+        .send-btn {
+            background: #2563eb;
+        }
+
+        .send-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .resend-btn {
+            background: #7c3aed;
+        }
+
+        .resend-btn:hover {
+            background: #6d28d9;
+        }
+
+        .cancel-btn {
+            background: #dc2626;
+        }
+
+        .cancel-btn:hover {
+            background: #b91c1c;
+        }
+
+        .ticket-action-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-used {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-sent {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-unknown {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px;
+            color: #6b7280;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: ticketSpin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes ticketSpin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .ticket-count {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        /* =====================================================
+           TICKET PREVIEW MODAL
+        ===================================================== */
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 5000;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 800px;
+            margin: 20px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            color: #111827;
+        }
+
+        .modal-close {
+            border: none;
+            background: transparent;
+            font-size: 25px;
+            color: #6b7280;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .ticket-preview {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            background: #ffffff;
+        }
+
+        .preview-header {
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .preview-header img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+
+        .preview-event {
+            font-size: 24px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .preview-subtitle {
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .preview-item {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 13px;
+        }
+
+        .preview-label {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .preview-value {
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .qr-preview {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .qr-preview img {
+            width: 180px;
+            height: 180px;
+        }
+
+        .preview-ticket-id {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 1000px) {
+            .ticket-filter-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .ticket-filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =====================================================
+         SIDEBAR
+    ===================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="logo-area">
+
+            <img
+                src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+                alt="SABSA Logo"
+            >
+
+            <h2>SABSA E-Ticket</h2>
+
+            <p>Administration Panel</p>
+
+        </div>
+
+        <nav class="nav-menu">
+
+            <a href="admin-dashboard.html">
+                Dashboard
+            </a>
+
+            <a href="participants.html">
+                Participants
+            </a>
+
+            <a href="tickets.html" class="active">
+                Tickets
+            </a>
+
+            <a href="event.html">
+                Event
+            </a>
+
+            <a href="scanner.html">
+                Scanner
+            </a>
+
+            <a href="settings.html">
+                Settings
+            </a>
+
+        </nav>
+
+        <button
+            class="logout-btn"
+            onclick="logout()"
+        >
+            Logout
+        </button>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ===================================================== -->
+
+    <main class="main">
+
+        <!-- PAGE HEADER -->
+
+        <div class="page-header">
+
+            <div>
+
+                <h1 class="page-title">
+                    Tickets
+                </h1>
+
+                <p class="page-subtitle">
+                    View and manage issued electronic tickets.
+                </p>
+
+            </div>
+
+            <a
+                href="admin-dashboard.html"
+                class="back-btn"
+            >
+                ← Dashboard
+            </a>
+
+        </div>
+
+
+        <!-- =================================================
+             EVENT SELECTOR
+        ================================================= -->
+
+        <div class="card">
+
+            <div class="form-group">
+
+                <label for="eventSelect">
+                    Select Event
+                </label>
+
+                <select
+                    id="eventSelect"
+                    onchange="eventChanged()"
+                >
+                    <option value="">
+                        Loading events...
+                    </option>
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             STATISTICS
+        ================================================= -->
+
+        <div class="stats">
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    Total Tickets
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="totalTickets"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    Active
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="activeTickets"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    Used
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="usedTickets"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    Cancelled
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="cancelledTickets"
+                >
+                    0
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-label">
+                    Emails Sent
+                </div>
+
+                <div
+                    class="stat-value"
+                    id="ticketEmailsSent"
+                >
+                    0
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             FILTERS
+        ================================================= -->
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div class="card-title">
+                    Search & Filter Tickets
+                </div>
+
+            </div>
+
+
+            <div class="ticket-filter-grid">
+
+                <!-- Search -->
+
+                <div class="filter-group">
+
+                    <label for="searchInput">
+                        Search
+                    </label>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Ticket ID, name or registration number..."
+                        oninput="applyFilters()"
+                    >
+
+                </div>
+
+
+                <!-- Batch -->
+
+                <div class="filter-group">
+
+                    <label for="batchFilter">
+                        Batch
+                    </label>
+
+                    <select
+                        id="batchFilter"
+                        onchange="applyFilters()"
+                    >
+
+                        <option value="">
+                            All Batches
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Ticket Status -->
+
+                <div class="filter-group">
+
+                    <label for="ticketStatusFilter">
+                        Ticket Status
+                    </label>
+
+                    <select
+                        id="ticketStatusFilter"
+                        onchange="applyFilters()"
+                    >
+
+                        <option value="">
+                            All Statuses
+                        </option>
+
+                        <option value="ACTIVE">
+                            Active
+                        </option>
+
+                        <option value="USED">
+                            Used
+                        </option>
+
+                        <option value="CANCELLED">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Email Status -->
+
+                <div class="filter-group">
+
+                    <label for="emailStatusFilter">
+                        Email Status
+                    </label>
+
+                    <select
+                        id="emailStatusFilter"
+                        onchange="applyFilters()"
+                    >
+
+                        <option value="">
+                            All Statuses
+                        </option>
+
+                        <option value="PENDING">
+                            Pending
+                        </option>
+
+                        <option value="SENT">
+                            Sent
+                        </option>
+
+                        <option value="FAILED">
+                            Failed
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TICKETS TABLE
+        ================================================= -->
+
+        <div class="card">
+
+            <div class="card-header">
+
+                <div class="card-title">
+                    Issued Tickets
+                </div>
+
+                <span
+                    class="ticket-count"
+                    id="tableCount"
+                >
+                    0 tickets
+                </span>
+
+            </div>
+
+
+            <div class="ticket-table-wrapper">
+
+                <table class="ticket-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>#</th>
+
+                            <th>Participant</th>
+
+                            <th>Registration No.</th>
+
+                            <th>Batch</th>
+
+                            <th>Ticket ID</th>
+
+                            <th>Ticket Status</th>
+
+                            <th>Email Status</th>
+
+                            <th>Created</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="ticketsTable">
+
+                        <tr>
+
+                            <td colspan="9">
+
+                                <div class="loading">
+
+                                    <div class="spinner"></div>
+
+                                    Loading tickets...
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         TICKET PREVIEW MODAL
+    ===================================================== -->
+
+    <div
+        class="modal"
+        id="ticketModal"
+    >
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>
+                    Ticket Preview
+                </h2>
+
+                <button
+                    class="modal-close"
+                    onclick="closeTicketModal()"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div
+                class="modal-body"
+                id="ticketModalBody"
+            >
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TOAST
+    ===================================================== -->
+
+    <div
+        id="toast"
+        class="toast"
+    ></div>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ===================================================== -->
+
+    <script>
+
+        /* =====================================================
+           SUPABASE CONFIGURATION
+        ===================================================== */
+
+        const SUPABASE_URL =
+            'https://xdaxxgsvorvfpnxteikv.supabase.co';
+
+        const SUPABASE_PUBLISHABLE_KEY =
+            'sb_publishable_wRysyx1ek-J7XrFOLxXfnA_Fp_0UsFO';
+
+        const supabaseClient =
+            window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_PUBLISHABLE_KEY
+            );
+
+
+        /* =====================================================
+           GLOBAL VARIABLES
+        ===================================================== */
+
+        let currentUser = null;
+        let currentAdmin = null;
+
+        let events = [];
+        let tickets = [];
+        let filteredTickets = [];
+
+
+        /* =====================================================
+           PAGE START
+        ===================================================== */
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            async function () {
+
+                await checkAuthentication();
+
+            }
+        );
+
+
+        /* =====================================================
+           AUTHENTICATION
+        ===================================================== */
+
+        async function checkAuthentication() {
+
+            try {
+
+                const {
+                    data: {
+                        session
+                    },
+                    error
+                } =
+                    await supabaseClient.auth.getSession();
+
+
+                if (error) {
+
+                    console.error(error);
+
+                    showToast(
+                        'Unable to check login session.',
+                        'error'
+                    );
+
+                    return;
+
+                }
+
+
+                if (!session) {
+
+                    window.location.href =
+                        'admin.html';
+
+                    return;
+
+                }
+
+
+                currentUser =
+                    session.user;
+
+
+                const {
+                    data: admin,
+                    error: adminError
+                } =
+                    await supabaseClient
+                        .from('admins')
+                        .select(
+                            'id, email, role'
+                        )
+                        .eq(
+                            'id',
+                            currentUser.id
+                        )
+                        .maybeSingle();
+
+
+                if (
+                    adminError ||
+                    !admin
+                ) {
+
+                    showToast(
+                        'You do not have administrator access.',
+                        'error'
+                    );
+
+                    setTimeout(
+                        () => {
+
+                            window.location.href =
+                                'admin.html';
+
+                        },
+                        1500
+                    );
+
+                    return;
+
+                }
+
+
+                if (
+                    !['ADMIN', 'STAFF']
+                        .includes(admin.role)
+                ) {
+
+                    showToast(
+                        'You do not have permission to access this page.',
+                        'error'
+                    );
+
+                    return;
+
+                }
+
+
+                currentAdmin =
+                    admin;
+
+
+                await loadEvents();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    'Authentication error.',
+                    'error'
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           LOAD EVENTS
+        ===================================================== */
+
+        async function loadEvents() {
+
+            try {
+
+                const {
+                    data,
+                    error
+                } =
+                    await supabaseClient
+                        .from('events')
+                        .select('*')
+                        .order(
+                            'created_at',
+                            {
+                                ascending: false
+                            }
+                        );
+
+
+                if (error) {
+
+                    console.error(error);
+
+                    showToast(
+                        'Unable to load events.',
+                        'error'
+                    );
+
+                    return;
+
+                }
+
+
+                events =
+                    data || [];
+
+
+                const eventSelect =
+                    document.getElementById(
+                        'eventSelect'
+                    );
+
+
+                eventSelect.innerHTML =
+                    '';
+
+
+                if (
+                    events.length === 0
+                ) {
+
+                    eventSelect.innerHTML =
+                        '<option value="">No events available</option>';
+
+                    renderEmpty(
+                        'No events are available.'
+                    );
+
+                    return;
+
+                }
+
+
+                events.forEach(
+                    event => {
+
+                        const option =
+                            document.createElement(
+                                'option'
+                            );
+
+                        option.value =
+                            event.id;
+
+                        option.textContent =
+                            `${event.event_name} (${event.event_code})`;
+
+                        eventSelect.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+
+                await eventChanged();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    'Unable to load events.',
+                    'error'
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           EVENT CHANGED
+        ===================================================== */
+
+        async function eventChanged() {
+
+            const eventId =
+                document.getElementById(
+                    'eventSelect'
+                ).value;
+
+
+            if (!eventId) {
+
+                tickets = [];
+
+                updateStatistics();
+
+                applyFilters();
+
+                return;
+
+            }
+
+
+            await loadTickets(eventId);
+
+        }
+
+
+        /* =====================================================
+           LOAD TICKETS
+        ===================================================== */
+
+        async function loadTickets(
+            eventId
+        ) {
+
+            showLoading();
+
+
+            try {
+
+                const {
+                    data: participantData,
+                    error: participantError
+                } =
+                    await supabaseClient
+                        .from('participants')
+                        .select(`
+                            id,
+                            full_name,
+                            email,
+                            registration_no,
+                            batch,
+                            event_id
+                        `)
+                        .eq(
+                            'event_id',
+                            eventId
+                        );
+
+
+                if (participantError) {
+
+                    console.error(
+                        participantError
+                    );
+
+                    throw new Error(
+                        'Unable to load participants.'
+                    );
+
+                }
+
+
+                const participantMap =
+                    new Map();
+
+
+                (
+                    participantData || []
+                ).forEach(
+                    participant => {
+
+                        participantMap.set(
+                            participant.id,
+                            participant
+                        );
+
+                    }
+                );
+
+
+                const participantIds =
+                    (
+                        participantData || []
+                    ).map(
+                        participant =>
+                            participant.id
+                    );
+
+
+                tickets = [];
+
+
+                if (
+                    participantIds.length > 0
+                ) {
+
+                    const {
+                        data: ticketData,
+                        error: ticketError
+                    } =
+                        await supabaseClient
+                            .from('tickets')
+                            .select(`
+                                id,
+                                participant_id,
+                                ticket_id,
+                                qr_data,
+                                ticket_status,
+                                email_status,
+                                created_at
+                            `)
+                            .in(
+                                'participant_id',
+                                participantIds
+                            )
+                            .order(
+                                'created_at',
+                                {
+                                    ascending: false
+                                }
+                            );
+
+
+                    if (ticketError) {
+
+                        console.error(
+                            ticketError
+                        );
+
+                        throw new Error(
+                            'Unable to load tickets.'
+                        );
+
+                    }
+
+
+                    tickets =
+                        (
+                            ticketData || []
+                        ).map(
+                            ticket => {
+
+                                return {
+                                    ...ticket,
+                                    participant:
+                                        participantMap.get(
+                                            ticket.participant_id
+                                        ) || null
+                                };
+
+                            }
+                        );
+
+                }
+
+
+                populateBatchFilter();
+
+                updateStatistics();
+
+                applyFilters();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    error.message ||
+                    'Unexpected error while loading tickets.',
+                    'error'
+                );
+
+                renderEmpty(
+                    'Unable to load tickets.'
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           POPULATE BATCH FILTER
+        ===================================================== */
+
+        function populateBatchFilter() {
+
+            const batchFilter =
+                document.getElementById(
+                    'batchFilter'
+                );
+
+
+            const currentValue =
+                batchFilter.value;
+
+
+            const batches =
+                [
+                    ...new Set(
+                        tickets
+                            .map(
+                                ticket =>
+                                    String(
+                                        ticket.participant?.batch || ''
+                                    ).trim()
+                            )
+                            .filter(
+                                batch =>
+                                    batch !== ''
+                            )
+                    )
+                ].sort(
+                    (a, b) =>
+                        a.localeCompare(b)
+                );
+
+
+            batchFilter.innerHTML =
+                '<option value="">All Batches</option>';
+
+
+            batches.forEach(
+                batch => {
+
+                    const option =
+                        document.createElement(
+                            'option'
+                        );
+
+                    option.value =
+                        batch;
+
+                    option.textContent =
+                        batch;
+
+                    batchFilter.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+
+            if (
+                batches.includes(
+                    currentValue
+                )
+            ) {
+
+                batchFilter.value =
+                    currentValue;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           STATISTICS
+        ===================================================== */
+
+        function updateStatistics() {
+
+            let active = 0;
+            let used = 0;
+            let cancelled = 0;
+            let sent = 0;
+
+
+            tickets.forEach(
+                ticket => {
+
+                    if (
+                        ticket.ticket_status ===
+                        'ACTIVE'
+                    ) {
+                        active++;
+                    }
+
+                    else if (
+                        ticket.ticket_status ===
+                        'USED'
+                    ) {
+                        used++;
+                    }
+
+                    else if (
+                        ticket.ticket_status ===
+                        'CANCELLED'
+                    ) {
+                        cancelled++;
+                    }
+
+
+                    if (
+                        ticket.email_status ===
+                        'SENT'
+                    ) {
+                        sent++;
+                    }
+
+                }
+            );
+
+
+            document.getElementById(
+                'totalTickets'
+            ).textContent =
+                tickets.length;
+
+
+            document.getElementById(
+                'activeTickets'
+            ).textContent =
+                active;
+
+
+            document.getElementById(
+                'usedTickets'
+            ).textContent =
+                used;
+
+
+            document.getElementById(
+                'cancelledTickets'
+            ).textContent =
+                cancelled;
+
+
+            document.getElementById(
+                'ticketEmailsSent'
+            ).textContent =
+                sent;
+
+        }
+
+
+        /* =====================================================
+           FILTERS
+        ===================================================== */
+
+        function applyFilters() {
+
+            const search =
+                document.getElementById(
+                    'searchInput'
+                ).value
+                    .trim()
+                    .toLowerCase();
+
+
+            const batch =
+                document.getElementById(
+                    'batchFilter'
+                ).value;
+
+
+            const ticketStatus =
+                document.getElementById(
+                    'ticketStatusFilter'
+                ).value;
+
+
+            const emailStatus =
+                document.getElementById(
+                    'emailStatusFilter'
+                ).value;
+
+
+            filteredTickets =
+                tickets.filter(
+                    ticket => {
+
+                        const participant =
+                            ticket.participant || {};
+
+
+                        const searchMatch =
+                            !search ||
+
+                            String(
+                                ticket.ticket_id ||
+                                ''
+                            )
+                                .toLowerCase()
+                                .includes(search) ||
+
+                            String(
+                                participant.full_name ||
+                                ''
+                            )
+                                .toLowerCase()
+                                .includes(search) ||
+
+                            String(
+                                participant.registration_no ||
+                                ''
+                            )
+                                .toLowerCase()
+                                .includes(search);
+
+
+                        if (
+                            !searchMatch
+                        ) {
+                            return false;
+                        }
+
+
+                        if (
+                            batch &&
+                            String(
+                                participant.batch ||
+                                ''
+                            ) !== batch
+                        ) {
+
+                            return false;
+
+                        }
+
+
+                        if (
+                            ticketStatus &&
+                            ticket.ticket_status !==
+                            ticketStatus
+                        ) {
+
+                            return false;
+
+                        }
+
+
+                        if (
+                            emailStatus &&
+                            ticket.email_status !==
+                            emailStatus
+                        ) {
+
+                            return false;
+
+                        }
+
+
+                        return true;
+
+                    }
+                );
+
+
+            renderTickets(
+                filteredTickets
+            );
+
+        }
+
+
+        /* =====================================================
+           RENDER TICKETS
+        ===================================================== */
+
+        function renderTickets(
+            list
+        ) {
+
+            const tbody =
+                document.getElementById(
+                    'ticketsTable'
+                );
+
+
+            document.getElementById(
+                'tableCount'
+            ).textContent =
+                `${list.length} ticket${list.length === 1 ? '' : 's'}`;
+
+
+            if (
+                list.length === 0
+            ) {
+
+                renderEmpty(
+                    'No tickets match the selected filters.'
+                );
+
+                return;
+
+            }
+
+
+            tbody.innerHTML =
+                '';
+
+
+            list.forEach(
+                (ticket, index) => {
+
+                    const participant =
+                        ticket.participant || {};
+
+
+                    const tr =
+                        document.createElement(
+                            'tr'
+                        );
+
+
+                    tr.innerHTML = `
+
+                        <td>
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            <div class="participant-name">
+                                ${escapeHtml(
+                                    participant.full_name ||
+                                    '—'
+                                )}
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="registration-number">
+                                ${escapeHtml(
+                                    participant.registration_no ||
+                                    '—'
+                                )}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${escapeHtml(
+                                participant.batch ||
+                                '—'
+                            )}
+                        </td>
+
+                        <td>
+                            <span class="ticket-id">
+                                ${escapeHtml(
+                                    ticket.ticket_id ||
+                                    '—'
+                                )}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${getTicketStatusBadge(
+                                ticket.ticket_status
+                            )}
+                        </td>
+
+                        <td>
+                            ${getEmailStatusBadge(
+                                ticket.email_status
+                            )}
+                        </td>
+
+                        <td>
+                            ${formatDate(
+                                ticket.created_at
+                            )}
+                        </td>
+
+                        <td>
+                            ${getActionButtons(
+                                ticket
+                            )}
+                        </td>
+
+                    `;
+
+
+                    tbody.appendChild(
+                        tr
+                    );
+
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           TICKET STATUS BADGE
+        ===================================================== */
+
+        function getTicketStatusBadge(
+            status
+        ) {
+
+            if (
+                status === 'ACTIVE'
+            ) {
+
+                return `
+                    <span class="status status-active">
+                        ACTIVE
+                    </span>
+                `;
+
+            }
+
+
+            if (
+                status === 'USED'
+            ) {
+
+                return `
+                    <span class="status status-used">
+                        USED
+                    </span>
+                `;
+
+            }
+
+
+            if (
+                status === 'CANCELLED'
+            ) {
+
+                return `
+                    <span class="status status-cancelled">
+                        CANCELLED
+                    </span>
+                `;
+
+            }
+
+
+            return `
+                <span class="status status-unknown">
+                    UNKNOWN
+                </span>
+            `;
+
+        }
+
+
+        /* =====================================================
+           EMAIL STATUS BADGE
+        ===================================================== */
+
+        function getEmailStatusBadge(
+            status
+        ) {
+
+            if (
+                status === 'SENT'
+            ) {
+
+                return `
+                    <span class="status status-sent">
+                        SENT
+                    </span>
+                `;
+
+            }
+
+
+            if (
+                status === 'PENDING'
+            ) {
+
+                return `
+                    <span class="status status-pending">
+                        PENDING
+                    </span>
+                `;
+
+            }
+
+
+            if (
+                status === 'FAILED'
+            ) {
+
+                return `
+                    <span class="status status-failed">
+                        FAILED
+                    </span>
+                `;
+
+            }
+
+
+            return `
+                <span class="status status-unknown">
+                    UNKNOWN
+                </span>
+            `;
+
+        }
+
+
+        /* =====================================================
+           ACTION BUTTONS
+        ===================================================== */
+
+        function getActionButtons(
+            ticket
+        ) {
+
+            let buttons = `
+
+                <button
+                    class="ticket-action-btn view-btn"
+                    onclick="viewTicket(
+                        '${escapeJs(
+                            ticket.ticket_id
+                        )}'
+                    )"
+                >
+                    View
+                </button>
+
+            `;
+
+
+            if (
+                ticket.email_status ===
+                'SENT'
+            ) {
+
+                buttons += `
+
+                    <button
+                        class="ticket-action-btn resend-btn"
+                        onclick="sendTicket(
+                            '${escapeJs(
+                                ticket.ticket_id
+                            )}',
+                            true
+                        )"
+                    >
+                        Resend
+                    </button>
+
+                `;
+
+            }
+
+            else {
+
+                buttons += `
+
+                    <button
+                        class="ticket-action-btn send-btn"
+                        onclick="sendTicket(
+                            '${escapeJs(
+                                ticket.ticket_id
+                            )}',
+                            false
+                        )"
+                    >
+                        Send
+                    </button>
+
+                `;
+
+            }
+
+
+            return `
+                <div class="action-group">
+                    ${buttons}
+                </div>
+            `;
+
+        }
+
+
+        /* =====================================================
+           SEND / RESEND TICKET
+        ===================================================== */
+
+        async function sendTicket(
+            ticketId,
+            isResend
+        ) {
+
+            if (
+                isResend
+            ) {
+
+                const confirmed =
+                    confirm(
+                        'This ticket has already been sent.\n\nDo you want to resend it?'
+                    );
+
+
+                if (!confirmed) {
+                    return;
+                }
+
+            }
+
+
+            try {
+
+                showToast(
+                    isResend
+                        ? 'Resending ticket...'
+                        : 'Sending ticket...',
+                    'info'
+                );
+
+
+                const {
+                    data: {
+                        session
+                    },
+                    error: sessionError
+                } =
+                    await supabaseClient.auth.getSession();
+
+
+                if (
+                    sessionError ||
+                    !session
+                ) {
+
+                    throw new Error(
+                        'Your login session has expired.'
+                    );
+
+                }
+
+
+                const response =
+                    await fetch(
+                        `${SUPABASE_URL}/functions/v1/send-ticket-email`,
+                        {
+
+                            method: 'POST',
+
+                            headers: {
+
+                                'Content-Type':
+                                    'application/json',
+
+                                'Authorization':
+                                    `Bearer ${session.access_token}`
+
+                            },
+
+                            body: JSON.stringify({
+
+                                ticket_id:
+                                    ticketId
+
+                            })
+
+                        }
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (
+                    !response.ok
+                ) {
+
+                    throw new Error(
+                        result.error ||
+                        'Unable to send ticket.'
+                    );
+
+                }
+
+
+                showToast(
+                    isResend
+                        ? 'Ticket resent successfully.'
+                        : 'Ticket sent successfully.',
+                    'success'
+                );
+
+
+                const eventId =
+                    document.getElementById(
+                        'eventSelect'
+                    ).value;
+
+
+                await loadTickets(
+                    eventId
+                );
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                showToast(
+                    error.message ||
+                    'Failed to send ticket.',
+                    'error'
+                );
+
+            }
+
+        }
+
+
+        /* =====================================================
+           VIEW TICKET
+        ===================================================== */
+
+        function viewTicket(
+            ticketId
+        ) {
+
+            const ticket =
+                tickets.find(
+                    item =>
+                        item.ticket_id ===
+                        ticketId
+                );
+
+
+            if (!ticket) {
+
+                showToast(
+                    'Ticket could not be found.',
+                    'error'
+                );
+
+                return;
+
+            }
+
+
+            const participant =
+                ticket.participant || {};
+
+
+            const event =
+                events.find(
+                    item =>
+                        item.id ===
+                        participant.event_id
+                );
+
+
+            const qrUrl =
+                `https://quickchart.io/qr?text=${encodeURIComponent(
+                    ticket.qr_data ||
+                    ticket.ticket_id
+                )}&size=220`;
+
+
+            document.getElementById(
+                'ticketModalBody'
+            ).innerHTML = `
+
+                <div class="ticket-preview">
+
+                    <div class="preview-header">
+
+                        <img
+                            src="${
+                                event?.logo_url ||
+                                'https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png'
+                            }"
+                            alt="Event Logo"
+                        >
+
+                        <div class="preview-event">
+                            ${escapeHtml(
+                                event?.event_name ||
+                                'SABSA Event'
+                            )}
+                        </div>
+
+                        <div class="preview-subtitle">
+                            Electronic Event Ticket
+                        </div>
+
+                    </div>
+
+
+                    <div class="preview-grid">
+
+                        <div class="preview-item">
+
+                            <div class="preview-label">
+                                Attendee
+                            </div>
+
+                            <div class="preview-value">
+                                ${escapeHtml(
+                                    participant.full_name ||
+                                    '—'
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div class="preview-item">
+
+                            <div class="preview-label">
+                                Registration No.
+                            </div>
+
+                            <div class="preview-value">
+                                ${escapeHtml(
+                                    participant.registration_no ||
+                                    '—'
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div class="preview-item">
+
+                            <div class="preview-label">
+                                Batch
+                            </div>
+
+                            <div class="preview-value">
+                                ${escapeHtml(
+                                    participant.batch ||
+                                    '—'
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div class="preview-item">
+
+                            <div class="preview-label">
+                                Email
+                            </div>
+
+                            <div class="preview-value">
+                                ${escapeHtml(
+                                    participant.email ||
+                                    '—'
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div class="preview-item">
+
+                            <div class="preview-label">
+                                Event Date
+                            </div>
+
+                            <div class="preview-value">
+                                ${escapeHtml(
+                                    event?.event_date ||
+                                    '—'
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <div class="preview-item">
+
+                            <div class="preview-label">
+                                Venue
+                            </div>
+
+                            <div class="preview-value">
+                                ${escapeHtml(
+                                    event?.venue ||
+                                    '—'
+                                )}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="qr-preview">
+
+                        <img
+                            src="${qrUrl}"
+                            alt="Ticket QR Code"
+                        >
+
+                        <div class="preview-ticket-id">
+                            ${escapeHtml(
+                                ticket.ticket_id
+                            )}
+                        </div>
+
+                    </div>
+
+                </div>
+
+            `;
+
+
+            document.getElementById(
+                'ticketModal'
+            ).style.display =
+                'block';
+
+        }
+
+
+        /* =====================================================
+           CLOSE MODAL
+        ===================================================== */
+
+        function closeTicketModal() {
+
+            document.getElementById(
+                'ticketModal'
+            ).style.display =
+                'none';
+
+        }
+
+
+        window.addEventListener(
+            'click',
+            function (event) {
+
+                const modal =
+                    document.getElementById(
+                        'ticketModal'
+                    );
+
+                if (
+                    event.target ===
+                    modal
+                ) {
+
+                    closeTicketModal();
+
+                }
+
+            }
+        );
+
+
+        /* =====================================================
+           FORMAT DATE
+        ===================================================== */
+
+        function formatDate(
+            value
+        ) {
+
+            if (!value) {
+                return '—';
+            }
+
+
+            const date =
+                new Date(value);
+
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                return '—';
+
+            }
+
+
+            return date.toLocaleString(
+                'en-GB',
+                {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }
+            );
+
+        }
+
+
+        /* =====================================================
+           LOADING
+        ===================================================== */
+
+        function showLoading() {
+
+            document.getElementById(
+                'ticketsTable'
+            ).innerHTML = `
+
+                <tr>
+
+                    <td colspan="9">
+
+                        <div class="loading">
+
+                            <div class="spinner"></div>
+
+                            Loading tickets...
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            document.getElementById(
+                'tableCount'
+            ).textContent =
+                'Loading...';
+
+        }
+
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        function renderEmpty(
+            message
+        ) {
+
+            document.getElementById(
+                'ticketsTable'
+            ).innerHTML = `
+
+                <tr>
+
+                    <td colspan="9">
+
+                        <div class="empty">
+
+                            ${escapeHtml(
+                                message
+                            )}
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+            document.getElementById(
+                'tableCount'
+            ).textContent =
+                '0 tickets';
+
+        }
+
+
+        /* =====================================================
+           ESCAPE HTML
+        ===================================================== */
+
+        function escapeHtml(
+            value
+        ) {
+
+            return String(
+                value ?? ''
+            )
+                .replace(
+                    /&/g,
+                    '&amp;'
+                )
+                .replace(
+                    /</g,
+                    '&lt;'
+                )
+                .replace(
+                    />/g,
+                    '&gt;'
+                )
+                .replace(
+                    /"/g,
+                    '&quot;'
+                )
+                .replace(
+                    /'/g,
+                    '&#039;'
+                );
+
+        }
+
+
+        /* =====================================================
+           ESCAPE JAVASCRIPT
+        ===================================================== */
+
+        function escapeJs(
+            value
+        ) {
+
+            return String(
+                value ?? ''
+            )
+                .replace(
+                    /\\/g,
+                    '\\\\'
+                )
+                .replace(
+                    /'/g,
+                    "\\'"
+                )
+                .replace(
+                    /\r/g,
+                    '\\r'
+                )
+                .replace(
+                    /\n/g,
+                    '\\n'
+                );
+
+        }
+
+
+        /* =====================================================
+           TOAST
+        ===================================================== */
+
+        let toastTimer = null;
+
+
+        function showToast(
+            message,
+            type = 'info'
+        ) {
+
+            const toast =
+                document.getElementById(
+                    'toast'
+                );
+
+
+            toast.textContent =
+                message;
+
+
+            toast.className =
+                `toast ${type}`;
+
+
+            toast.style.display =
+                'block';
+
+
+            clearTimeout(
+                toastTimer
+            );
+
+
+            toastTimer =
+                setTimeout(
+                    () => {
+
+                        toast.style.display =
+                            'none';
+
+                    },
+                    5000
+                );
+
+        }
+
+
+        /* =====================================================
+           LOGOUT
+        ===================================================== */
+
+        async function logout() {
+
+            const confirmed =
+                confirm(
+                    'Are you sure you want to logout?'
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                await supabaseClient.auth.signOut();
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+            }
+
+
+            window.location.href =
+                'admin.html';
+
+        }
+
+
+        /* =====================================================
+           AUTH STATE
+        ===================================================== */
+
+        supabaseClient.auth.onAuthStateChange(
+            (
+                event,
+                session
+            ) => {
+
+                if (
+                    event ===
+                    'SIGNED_OUT'
+                ) {
+
+                    window.location.href =
+                        'admin.html';
+
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>
