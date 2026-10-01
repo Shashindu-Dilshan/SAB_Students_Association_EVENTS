@@ -1943,18 +1943,18 @@
      */
 
     const {
-      error: insertError
-    } =
-      await supabaseClient
-        .from('attendance')
-        .insert({
+  error: insertError
+} =
+  await supabaseClient
+    .from('attendance')
+    .insert({
 
-          id: ticket.id,
+      ticket_id: ticket.id,
 
-          scanned_by:
-            currentUser.id
+      scanned_by:
+        currentUser.id
 
-        });
+    });
 
 
     if (insertError) {
