@@ -1,0 +1,2561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Scanner - SABSA E-Ticket System</title>
+
+  <link rel="stylesheet" href="assets/css/admin.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- QR Scanner -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+  <style>
+
+    /* =========================================
+       SCANNER PAGE
+    ========================================= */
+
+    .scanner-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .scanner-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .scanner-header {
+      margin-bottom: 20px;
+    }
+
+    .scanner-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 5px;
+    }
+
+    .scanner-description {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    /* Event selector */
+
+    .field-group {
+      margin-bottom: 18px;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .field-input,
+    .field-select {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 14px;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .field-input:focus,
+    .field-select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+    }
+
+    /* QR scanner */
+
+    .qr-wrapper {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+      background: #111827;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #qr-reader {
+      width: 100%;
+      border: 0 !important;
+    }
+
+    #qr-reader video {
+      width: 100% !important;
+      border-radius: 0 !important;
+    }
+
+    #qr-reader__scan_region {
+      background: #111827;
+    }
+
+    #qr-reader__dashboard {
+      padding: 10px !important;
+      background: #111827;
+      color: #ffffff;
+    }
+
+    #qr-reader__dashboard button {
+      background: #2563eb !important;
+      color: #ffffff !important;
+      border: 0 !important;
+      border-radius: 6px !important;
+      padding: 8px 12px !important;
+      cursor: pointer;
+    }
+
+    #qr-reader__dashboard select {
+      padding: 7px;
+      border-radius: 6px;
+    }
+
+    .scanner-status {
+      margin-top: 15px;
+      padding: 11px 13px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .scanner-status.ready {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .scanner-status.scanning {
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .scanner-status.disabled {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    /* Scanner buttons */
+
+    .scanner-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .scanner-btn {
+      flex: 1;
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .start-btn {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .start-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .stop-btn {
+      background: #374151;
+      color: #ffffff;
+    }
+
+    .stop-btn:hover {
+      background: #1f2937;
+    }
+
+    .scanner-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Manual ticket */
+
+    .manual-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .manual-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .manual-row .field-input {
+      flex: 1;
+    }
+
+    .manual-btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 0 18px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .manual-btn:hover {
+      background: #1f2937;
+    }
+
+    /* Result */
+
+    .result-card {
+      text-align: center;
+      min-height: 300px;
+    }
+
+    .result-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      margin: 5px auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .result-icon.success {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .result-icon.warning {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .result-icon.error {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .result-icon.neutral {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .result-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 7px;
+    }
+
+    .result-message {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .attendee-details {
+      text-align: left;
+      border-top: 1px solid #e5e7eb;
+      margin-top: 15px;
+      padding-top: 10px;
+    }
+
+    .attendee-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 13px;
+    }
+
+    .attendee-label {
+      color: #6b7280;
+    }
+
+    .attendee-value {
+      color: #111827;
+      font-weight: 600;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    /* Session statistics */
+
+    .session-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .session-stat {
+      padding: 15px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+      text-align: center;
+    }
+
+    .session-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .session-stat-label {
+      margin-top: 3px;
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    /* Recent scans */
+
+    .recent-scans {
+      margin-top: 20px;
+    }
+
+    .recent-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f9fafb;
+      border: 1px solid #f0f0f0;
+    }
+
+    .recent-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .recent-ticket {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .recent-time {
+      font-size: 11px;
+      color: #6b7280;
+      white-space: nowrap;
+    }
+
+    /* Toast */
+
+    .toast {
+      position: fixed;
+      right: 25px;
+      bottom: 25px;
+      min-width: 280px;
+      max-width: 420px;
+      padding: 13px 16px;
+      border-radius: 9px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+      display: none;
+      z-index: 9999;
+    }
+
+    .toast.success {
+      display: block;
+      background: #15803d;
+    }
+
+    .toast.error {
+      display: block;
+      background: #b91c1c;
+    }
+
+    .toast.warning {
+      display: block;
+      background: #b45309;
+    }
+
+    /* Loading */
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1050px) {
+
+      .scanner-layout {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 650px) {
+
+      .scanner-buttons {
+        flex-direction: column;
+      }
+
+      .manual-row {
+        flex-direction: column;
+      }
+
+      .manual-btn {
+        height: 42px;
+      }
+
+      .session-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <!-- =========================================
+       SIDEBAR
+  ========================================== -->
+
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+      <img
+        src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+        alt="SABSA Logo"
+      >
+
+      <div>
+        <div class="brand-title">SABSA</div>
+        <div class="brand-subtitle">E-Ticket System</div>
+      </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+      <a href="admin-dashboard.html" class="nav-item">
+        <span class="nav-icon">▦</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="participants.html" class="nav-item">
+        <span class="nav-icon">♙</span>
+        <span>Participants</span>
+      </a>
+
+      <a href="tickets.html" class="nav-item">
+        <span class="nav-icon">▤</span>
+        <span>Tickets</span>
+      </a>
+
+      <a href="event.html" class="nav-item">
+        <span class="nav-icon">◫</span>
+        <span>Event</span>
+      </a>
+
+      <a href="scanner.html" class="nav-item active">
+        <span class="nav-icon">▣</span>
+        <span>Scanner</span>
+      </a>
+
+      <a href="settings.html" class="nav-item">
+        <span class="nav-icon">⚙</span>
+        <span>Settings</span>
+      </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+      <div class="sidebar-user">
+
+        <div
+          class="sidebar-user-avatar"
+          id="userAvatar"
+        >
+          A
+        </div>
+
+        <div class="sidebar-user-info">
+
+          <div id="userName">
+            Admin
+          </div>
+
+          <div id="userEmail">
+            Loading...
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="logout-btn"
+        onclick="logout()"
+      >
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =========================================
+       MAIN CONTENT
+  ========================================== -->
+
+  <main class="main-content">
+
+    <div class="page-header">
+
+      <div>
+
+        <h1 class="page-title">
+          QR Scanner
+        </h1>
+
+        <p class="page-subtitle">
+          Scan electronic tickets and record event attendance.
+        </p>
+
+      </div>
+
+
+      <a
+        href="admin-dashboard.html"
+        class="back-btn"
+      >
+        ← Dashboard
+      </a>
+
+    </div>
+
+
+    <!-- EVENT SELECTOR -->
+
+    <div class="scanner-card" style="margin-bottom:24px;">
+
+      <div class="field-group" style="margin-bottom:0;">
+
+        <label
+          class="field-label"
+          for="eventSelect"
+        >
+          Select Event
+        </label>
+
+        <select
+          id="eventSelect"
+          class="field-select"
+          onchange="eventChanged()"
+        >
+          <option value="">
+            Loading events...
+          </option>
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <div class="scanner-layout">
+
+      <!-- =====================================
+           LEFT SIDE
+      ====================================== -->
+
+      <div>
+
+        <div class="scanner-card">
+
+          <div class="scanner-header">
+
+            <div class="scanner-title">
+              Ticket Scanner
+            </div>
+
+            <div class="scanner-description">
+              Point the camera at the participant's QR code.
+            </div>
+
+          </div>
+
+
+          <!-- QR CAMERA -->
+
+          <div class="qr-wrapper">
+
+            <div id="qr-reader"></div>
+
+          </div>
+
+
+          <div
+            id="scannerStatus"
+            class="scanner-status ready"
+          >
+            Select an event to begin.
+          </div>
+
+
+          <div class="scanner-buttons">
+
+            <button
+              id="startScannerBtn"
+              class="scanner-btn start-btn"
+              onclick="startScanner()"
+              disabled
+            >
+              Start Scanner
+            </button>
+
+            <button
+              id="stopScannerBtn"
+              class="scanner-btn stop-btn"
+              onclick="stopScanner()"
+              disabled
+            >
+              Stop Scanner
+            </button>
+
+          </div>
+
+
+          <!-- MANUAL ENTRY -->
+
+          <div class="manual-section">
+
+            <div class="scanner-title" style="font-size:15px;">
+              Manual Ticket Entry
+            </div>
+
+            <div
+              class="scanner-description"
+              style="margin-bottom:12px;"
+            >
+              Use this if the QR code cannot be scanned.
+            </div>
+
+
+            <div class="manual-row">
+
+              <input
+                type="text"
+                id="manualTicketId"
+                class="field-input"
+                placeholder="Enter Ticket ID"
+                autocomplete="off"
+              >
+
+              <button
+                class="manual-btn"
+                onclick="manualScan()"
+              >
+                Verify Ticket
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SESSION STATS -->
+
+        <div class="session-stats">
+
+          <div class="session-stat">
+
+            <div
+              class="session-stat-value"
+              id="sessionScanned"
+            >
+              0
+            </div>
+
+            <div class="session-stat-label">
+              Scanned
+            </div>
+
+          </div>
+
+
+          <div class="session-stat">
+
+            <div
+              class="session-stat-value"
+              id="sessionSuccessful"
+            >
+              0
+            </div>
+
+            <div class="session-stat-label">
+              Successful
+            </div>
+
+          </div>
+
+
+          <div class="session-stat">
+
+            <div
+              class="session-stat-value"
+              id="sessionDuplicate"
+            >
+              0
+            </div>
+
+            <div class="session-stat-label">
+              Duplicate
+            </div>
+
+          </div>
+
+
+          <div class="session-stat">
+
+            <div
+              class="session-stat-value"
+              id="sessionInvalid"
+            >
+              0
+            </div>
+
+            <div class="session-stat-label">
+              Invalid
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- RECENT SCANS -->
+
+        <div class="scanner-card recent-scans">
+
+          <div class="recent-title">
+            Recent Scans
+          </div>
+
+          <div
+            id="recentList"
+            class="recent-list"
+          >
+
+            <div
+              style="
+                text-align:center;
+                padding:20px;
+                color:#9ca3af;
+                font-size:13px;
+              "
+            >
+              No scans yet.
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           RIGHT SIDE
+      ====================================== -->
+
+      <div>
+
+        <div class="scanner-card result-card">
+
+          <div
+            id="resultIcon"
+            class="result-icon neutral"
+          >
+            ✓
+          </div>
+
+
+          <div
+            id="resultTitle"
+            class="result-title"
+          >
+            Ready to Scan
+          </div>
+
+
+          <div
+            id="resultMessage"
+            class="result-message"
+          >
+            Select an event and start the scanner.
+          </div>
+
+
+          <div
+            id="attendeeDetails"
+            class="attendee-details"
+            style="display:none;"
+          >
+
+            <div class="attendee-row">
+
+              <span class="attendee-label">
+                Name
+              </span>
+
+              <span
+                class="attendee-value"
+                id="attendeeName"
+              >
+                —
+              </span>
+
+            </div>
+
+
+            <div class="attendee-row">
+
+              <span class="attendee-label">
+                Registration No.
+              </span>
+
+              <span
+                class="attendee-value"
+                id="attendeeRegistration"
+              >
+                —
+              </span>
+
+            </div>
+
+
+            <div class="attendee-row">
+
+              <span class="attendee-label">
+                Batch
+              </span>
+
+              <span
+                class="attendee-value"
+                id="attendeeBatch"
+              >
+                —
+              </span>
+
+            </div>
+
+
+            <div class="attendee-row">
+
+              <span class="attendee-label">
+                Meal
+              </span>
+
+              <span
+                class="attendee-value"
+                id="attendeeMeal"
+              >
+                —
+              </span>
+
+            </div>
+
+
+            <div class="attendee-row">
+
+              <span class="attendee-label">
+                Ticket ID
+              </span>
+
+              <span
+                class="attendee-value"
+                id="attendeeTicket"
+              >
+                —
+              </span>
+
+            </div>
+
+
+            <div class="attendee-row">
+
+              <span class="attendee-label">
+                Scan Time
+              </span>
+
+              <span
+                class="attendee-value"
+                id="attendeeTime"
+              >
+                —
+              </span>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- TOAST -->
+
+  <div
+    id="toast"
+    class="toast"
+  ></div>
+
+
+<script>
+
+  /* =========================================
+     SUPABASE CONFIGURATION
+  ========================================== */
+
+  const SUPABASE_URL =
+    'https://xdaxxgsvorvfpnxteikv.supabase.co';
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    'sb_publishable_wRysyx1ek-J7XrFOLxXfnA_Fp_0UsFO';
+
+
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* =========================================
+     GLOBAL VARIABLES
+  ========================================== */
+
+  let currentUser = null;
+
+  let currentAdmin = null;
+
+  let events = [];
+
+  let currentEvent = null;
+
+  let html5QrCode = null;
+
+  let scannerRunning = false;
+
+  let processingScan = false;
+
+  let sessionScanned = 0;
+
+  let sessionSuccessful = 0;
+
+  let sessionDuplicate = 0;
+
+  let sessionInvalid = 0;
+
+  let recentScans = [];
+
+
+  /* =========================================
+     INITIALIZE
+  ========================================== */
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    async () => {
+
+      try {
+
+        await checkAuthentication();
+
+        await loadEvents();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showToast(
+          error.message ||
+          'Unable to load scanner.',
+          'error'
+        );
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     AUTHENTICATION
+  ========================================== */
+
+  async function checkAuthentication() {
+
+    const {
+      data: {
+        session
+      }
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (!session) {
+
+      window.location.href =
+        'admin.html';
+
+      throw new Error(
+        'Authentication required.'
+      );
+
+    }
+
+
+    currentUser =
+      session.user;
+
+
+    const {
+      data: admin,
+      error
+    } =
+      await supabaseClient
+        .from('admins')
+        .select(
+          'id, email, role'
+        )
+        .eq(
+          'id',
+          currentUser.id
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+      throw new Error(
+        'Unable to verify administrator access.'
+      );
+
+    }
+
+
+    if (
+      !admin ||
+      !['ADMIN', 'STAFF'].includes(
+        admin.role
+      )
+    ) {
+
+      await supabaseClient.auth.signOut();
+
+      window.location.href =
+        'admin.html';
+
+      throw new Error(
+        'You do not have permission to use the scanner.'
+      );
+
+    }
+
+
+    currentAdmin =
+      admin;
+
+
+    document.getElementById(
+      'userEmail'
+    ).textContent =
+      admin.email ||
+      currentUser.email ||
+      'Admin';
+
+
+    document.getElementById(
+      'userName'
+    ).textContent =
+      admin.role === 'ADMIN'
+        ? 'Administrator'
+        : 'Staff';
+
+
+    document.getElementById(
+      'userAvatar'
+    ).textContent =
+      admin.role === 'ADMIN'
+        ? 'A'
+        : 'S';
+
+  }
+
+
+  /* =========================================
+     LOAD EVENTS
+  ========================================== */
+
+  async function loadEvents() {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from('events')
+        .select('*')
+        .order(
+          'created_at',
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+
+      throw new Error(
+        'Unable to load events: ' +
+        error.message
+      );
+
+    }
+
+
+    events =
+      data || [];
+
+
+    const select =
+      document.getElementById(
+        'eventSelect'
+      );
+
+
+    select.innerHTML = '';
+
+
+    if (!events.length) {
+
+      select.innerHTML =
+        '<option value="">No events found</option>';
+
+      return;
+
+    }
+
+
+    events.forEach(
+      event => {
+
+        const option =
+          document.createElement(
+            'option'
+          );
+
+        option.value =
+          event.id;
+
+        option.textContent =
+          `${event.event_name} (${event.event_code})`;
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    select.value =
+      events[0].id;
+
+
+    await selectEvent(
+      events[0].id
+    );
+
+  }
+
+
+  /* =========================================
+     EVENT CHANGED
+  ========================================== */
+
+  async function eventChanged() {
+
+    const eventId =
+      document.getElementById(
+        'eventSelect'
+      ).value;
+
+
+    if (!eventId) {
+
+      currentEvent = null;
+
+      stopScanner();
+
+      setScannerStatus(
+        'ready',
+        'Select an event to begin.'
+      );
+
+      return;
+
+    }
+
+
+    await selectEvent(
+      eventId
+    );
+
+  }
+
+
+  /* =========================================
+     SELECT EVENT
+  ========================================== */
+
+  async function selectEvent(
+    eventId
+  ) {
+
+    currentEvent =
+      events.find(
+        event =>
+          event.id === eventId
+      );
+
+
+    if (!currentEvent) {
+
+      return;
+
+    }
+
+
+    stopScanner();
+
+
+    clearResult();
+
+
+    if (
+      currentEvent.scanner_enabled !== true
+    ) {
+
+      setScannerStatus(
+        'disabled',
+        'Scanner is disabled for this event.'
+      );
+
+
+      document.getElementById(
+        'startScannerBtn'
+      ).disabled = true;
+
+
+      return;
+
+    }
+
+
+    setScannerStatus(
+      'ready',
+      'Scanner is ready. Click Start Scanner.'
+    );
+
+
+    document.getElementById(
+      'startScannerBtn'
+    ).disabled = false;
+
+  }
+
+
+  /* =========================================
+     START SCANNER
+  ========================================== */
+
+  async function startScanner() {
+
+    if (!currentEvent) {
+
+      showToast(
+        'Please select an event first.',
+        'warning'
+      );
+
+      return;
+
+    }
+
+
+    if (
+      currentEvent.scanner_enabled !== true
+    ) {
+
+      showToast(
+        'Scanner is disabled for this event.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    if (scannerRunning) {
+
+      return;
+
+    }
+
+
+    try {
+
+      html5QrCode =
+        new Html5Qrcode(
+          'qr-reader'
+        );
+
+
+      const config = {
+
+        fps: 10,
+
+        qrbox: {
+          width: 250,
+          height: 250
+        },
+
+        aspectRatio: 1.0
+
+      };
+
+
+      await html5QrCode.start(
+
+        {
+          facingMode: 'environment'
+        },
+
+        config,
+
+        qrCodeMessage => {
+
+          handleScannedCode(
+            qrCodeMessage
+          );
+
+        },
+
+        errorMessage => {
+
+          // Normal scanner errors are ignored.
+
+        }
+
+      );
+
+
+      scannerRunning = true;
+
+
+      document.getElementById(
+        'startScannerBtn'
+      ).disabled = true;
+
+
+      document.getElementById(
+        'stopScannerBtn'
+      ).disabled = false;
+
+
+      setScannerStatus(
+        'scanning',
+        'Scanner is active. Point the camera at a QR code.'
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      scannerRunning = false;
+
+
+      showToast(
+        'Unable to start camera. Please allow camera access.',
+        'error'
+      );
+
+
+      setScannerStatus(
+        'disabled',
+        'Camera could not be started.'
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     STOP SCANNER
+  ========================================== */
+
+  async function stopScanner() {
+
+    if (
+      html5QrCode &&
+      scannerRunning
+    ) {
+
+      try {
+
+        await html5QrCode.stop();
+
+      } catch (error) {
+
+        console.warn(
+          'Scanner stop:',
+          error
+        );
+
+      }
+
+    }
+
+
+    scannerRunning = false;
+
+
+    document.getElementById(
+      'startScannerBtn'
+    ).disabled =
+      !currentEvent ||
+      currentEvent.scanner_enabled !== true;
+
+
+    document.getElementById(
+      'stopScannerBtn'
+    ).disabled =
+      true;
+
+
+    if (currentEvent) {
+
+      setScannerStatus(
+        'ready',
+        'Scanner stopped. Click Start Scanner to continue.'
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     QR CODE HANDLER
+  ========================================== */
+
+  async function handleScannedCode(
+    qrCodeMessage
+  ) {
+
+    if (processingScan) {
+
+      return;
+
+    }
+
+
+    const ticketId =
+      String(
+        qrCodeMessage || ''
+      ).trim();
+
+
+    if (!ticketId) {
+
+      return;
+
+    }
+
+
+    processingScan = true;
+
+
+    await processTicket(
+      ticketId
+    );
+
+
+    /*
+     * Small delay prevents the same QR
+     * from being processed repeatedly.
+     */
+
+    setTimeout(
+      () => {
+
+        processingScan = false;
+
+      },
+      1500
+    );
+
+  }
+
+
+  /* =========================================
+     MANUAL SCAN
+  ========================================== */
+
+  async function manualScan() {
+
+    const input =
+      document.getElementById(
+        'manualTicketId'
+      );
+
+
+    const ticketId =
+      input.value.trim();
+
+
+    if (!ticketId) {
+
+      showToast(
+        'Enter a Ticket ID.',
+        'warning'
+      );
+
+      input.focus();
+
+      return;
+
+    }
+
+
+    if (!currentEvent) {
+
+      showToast(
+        'Please select an event first.',
+        'warning'
+      );
+
+      return;
+
+    }
+
+
+    if (processingScan) {
+
+      return;
+
+    }
+
+
+    processingScan = true;
+
+
+    await processTicket(
+      ticketId
+    );
+
+
+    input.value = '';
+
+
+    setTimeout(
+      () => {
+
+        processingScan = false;
+
+      },
+      1000
+    );
+
+  }
+
+
+  /* =========================================
+     PROCESS TICKET
+  ========================================== */
+
+  async function processTicket(
+    ticketId
+  ) {
+
+    sessionScanned++;
+
+    updateSessionStats();
+
+
+    if (!currentEvent) {
+
+      showResult(
+        'error',
+        'No Event Selected',
+        'Please select an event before scanning.'
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    if (
+      currentEvent.scanner_enabled !== true
+    ) {
+
+      showResult(
+        'error',
+        'Scanner Disabled',
+        'Attendance scanning is currently disabled for this event.'
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Find ticket.
+     */
+
+    const {
+      data: ticket,
+      error: ticketError
+    } =
+      await supabaseClient
+        .from('tickets')
+        .select(`
+          id,
+          participant_id,
+          ticket_id,
+          qr_data,
+          ticket_status,
+          email_status
+        `)
+        .eq(
+          'ticket_id',
+          ticketId
+        )
+        .maybeSingle();
+
+
+    if (ticketError) {
+
+      console.error(ticketError);
+
+      showResult(
+        'error',
+        'Verification Error',
+        ticketError.message
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    if (!ticket) {
+
+      showResult(
+        'error',
+        'Invalid Ticket',
+        'This Ticket ID does not exist in the system.'
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Get participant.
+     */
+
+    const {
+      data: participant,
+      error: participantError
+    } =
+      await supabaseClient
+        .from('participants')
+        .select(`
+          id,
+          event_id,
+          full_name,
+          registration_no,
+          batch,
+          gender,
+          meal
+        `)
+        .eq(
+          'id',
+          ticket.participant_id
+        )
+        .single();
+
+
+    if (participantError) {
+
+      console.error(
+        participantError
+      );
+
+      showResult(
+        'error',
+        'Participant Error',
+        'Unable to retrieve participant information.'
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Make sure ticket belongs
+     * to selected event.
+     */
+
+    if (
+      participant.event_id !==
+      currentEvent.id
+    ) {
+
+      showResult(
+        'error',
+        'Wrong Event',
+        'This ticket belongs to a different event.'
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Check ticket status.
+     */
+
+    if (
+      ticket.ticket_status ===
+      'CANCELLED'
+    ) {
+
+      showResult(
+        'error',
+        'Ticket Cancelled',
+        'This ticket has been cancelled and cannot be used.'
+      );
+
+      showAttendee(
+        participant,
+        ticket,
+        null
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Check whether attendance
+     * already exists.
+     */
+
+    const {
+      data: existingAttendance,
+      error: attendanceCheckError
+    } =
+      await supabaseClient
+        .from('attendance')
+        .select(`
+          id,
+          scanned_at,
+          scanned_by
+        `)
+        .eq(
+          'id',
+          ticket.id
+        )
+        .maybeSingle();
+
+
+    if (attendanceCheckError) {
+
+      console.error(
+        attendanceCheckError
+      );
+
+      showResult(
+        'error',
+        'Verification Error',
+        attendanceCheckError.message
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    if (
+      existingAttendance
+    ) {
+
+      const previousTime =
+        formatDateTime(
+          existingAttendance.scanned_at
+        );
+
+
+      showResult(
+        'warning',
+        'Already Scanned',
+        `This ticket was already used at ${previousTime}.`
+      );
+
+
+      showAttendee(
+        participant,
+        ticket,
+        existingAttendance.scanned_at
+      );
+
+
+      addRecentScan(
+        participant,
+        ticket,
+        'duplicate'
+      );
+
+
+      sessionDuplicate++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Record attendance.
+     */
+
+    const {
+      error: insertError
+    } =
+      await supabaseClient
+        .from('attendance')
+        .insert({
+
+          id: ticket.id,
+
+          scanned_by:
+            currentUser.id
+
+        });
+
+
+    if (insertError) {
+
+      /*
+       * If another scanner recorded
+       * the ticket at the same time,
+       * the unique ticket/attendance ID
+       * protects against duplicate records.
+       */
+
+      if (
+        insertError.code ===
+        '23505'
+      ) {
+
+        showResult(
+          'warning',
+          'Already Scanned',
+          'This ticket has already been scanned.'
+        );
+
+        sessionDuplicate++;
+
+        updateSessionStats();
+
+        return;
+
+      }
+
+
+      console.error(
+        insertError
+      );
+
+      showResult(
+        'error',
+        'Attendance Error',
+        insertError.message
+      );
+
+      sessionInvalid++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * Mark ticket as USED.
+     */
+
+    const {
+      error: updateError
+    } =
+      await supabaseClient
+        .from('tickets')
+        .update({
+
+          ticket_status:
+            'USED'
+
+        })
+        .eq(
+          'id',
+          ticket.id
+        )
+        .eq(
+          'ticket_status',
+          'ACTIVE'
+        );
+
+
+    if (updateError) {
+
+      console.error(
+        updateError
+      );
+
+      showResult(
+        'warning',
+        'Attendance Recorded',
+        'Attendance was recorded, but the ticket status could not be updated.'
+      );
+
+
+      showAttendee(
+        participant,
+        ticket,
+        new Date().toISOString()
+      );
+
+
+      sessionSuccessful++;
+
+      updateSessionStats();
+
+      return;
+
+    }
+
+
+    /*
+     * SUCCESS
+     */
+
+    const scanTime =
+      new Date().toISOString();
+
+
+    showResult(
+      'success',
+      'Attendance Recorded',
+      'Ticket verified successfully. Welcome!'
+    );
+
+
+    showAttendee(
+      participant,
+      ticket,
+      scanTime
+    );
+
+
+    addRecentScan(
+      participant,
+      ticket,
+      'success'
+    );
+
+
+    sessionSuccessful++;
+
+    updateSessionStats();
+
+
+    /*
+     * Stop scanner momentarily
+     * after a successful scan.
+     */
+
+    if (scannerRunning) {
+
+      await stopScanner();
+
+    }
+
+  }
+
+
+  /* =========================================
+     SHOW RESULT
+  ========================================== */
+
+  function showResult(
+    type,
+    title,
+    message
+  ) {
+
+    const icon =
+      document.getElementById(
+        'resultIcon'
+      );
+
+
+    icon.className =
+      'result-icon ' + type;
+
+
+    if (type === 'success') {
+
+      icon.textContent = '✓';
+
+    } else if (
+      type === 'warning'
+    ) {
+
+      icon.textContent = '!';
+
+    } else {
+
+      icon.textContent = '×';
+
+    }
+
+
+    document.getElementById(
+      'resultTitle'
+    ).textContent =
+      title;
+
+
+    document.getElementById(
+      'resultMessage'
+    ).textContent =
+      message;
+
+  }
+
+
+  /* =========================================
+     SHOW ATTENDEE
+  ========================================== */
+
+  function showAttendee(
+    participant,
+    ticket,
+    scanTime
+  ) {
+
+    document.getElementById(
+      'attendeeDetails'
+    ).style.display =
+      'block';
+
+
+    document.getElementById(
+      'attendeeName'
+    ).textContent =
+      participant.full_name ||
+      '—';
+
+
+    document.getElementById(
+      'attendeeRegistration'
+    ).textContent =
+      participant.registration_no ||
+      '—';
+
+
+    document.getElementById(
+      'attendeeBatch'
+    ).textContent =
+      participant.batch ||
+      '—';
+
+
+    document.getElementById(
+      'attendeeMeal'
+    ).textContent =
+      participant.meal ||
+      '—';
+
+
+    document.getElementById(
+      'attendeeTicket'
+    ).textContent =
+      ticket.ticket_id ||
+      '—';
+
+
+    document.getElementById(
+      'attendeeTime'
+    ).textContent =
+      scanTime
+        ? formatDateTime(scanTime)
+        : '—';
+
+  }
+
+
+  /* =========================================
+     CLEAR RESULT
+  ========================================== */
+
+  function clearResult() {
+
+    document.getElementById(
+      'resultIcon'
+    ).className =
+      'result-icon neutral';
+
+
+    document.getElementById(
+      'resultIcon'
+    ).textContent =
+      '✓';
+
+
+    document.getElementById(
+      'resultTitle'
+    ).textContent =
+      'Ready to Scan';
+
+
+    document.getElementById(
+      'resultMessage'
+    ).textContent =
+      'Select an event and start the scanner.';
+
+
+    document.getElementById(
+      'attendeeDetails'
+    ).style.display =
+      'none';
+
+  }
+
+
+  /* =========================================
+     SESSION STATISTICS
+  ========================================== */
+
+  function updateSessionStats() {
+
+    document.getElementById(
+      'sessionScanned'
+    ).textContent =
+      sessionScanned;
+
+
+    document.getElementById(
+      'sessionSuccessful'
+    ).textContent =
+      sessionSuccessful;
+
+
+    document.getElementById(
+      'sessionDuplicate'
+    ).textContent =
+      sessionDuplicate;
+
+
+    document.getElementById(
+      'sessionInvalid'
+    ).textContent =
+      sessionInvalid;
+
+  }
+
+
+  /* =========================================
+     RECENT SCANS
+  ========================================== */
+
+  function addRecentScan(
+    participant,
+    ticket,
+    type
+  ) {
+
+    recentScans.unshift({
+
+      name:
+        participant.full_name,
+
+      ticket:
+        ticket.ticket_id,
+
+      time:
+        new Date(),
+
+      type
+
+    });
+
+
+    /*
+     * Keep last 10.
+     */
+
+    recentScans =
+      recentScans.slice(
+        0,
+        10
+      );
+
+
+    renderRecentScans();
+
+  }
+
+
+  function renderRecentScans() {
+
+    const container =
+      document.getElementById(
+        'recentList'
+      );
+
+
+    if (!recentScans.length) {
+
+      container.innerHTML = `
+        <div
+          style="
+            text-align:center;
+            padding:20px;
+            color:#9ca3af;
+            font-size:13px;
+          "
+        >
+          No scans yet.
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    container.innerHTML =
+      recentScans
+        .map(
+          scan => `
+
+            <div class="recent-item">
+
+              <div>
+
+                <div class="recent-name">
+                  ${escapeHtml(scan.name)}
+                </div>
+
+                <div class="recent-ticket">
+                  ${escapeHtml(scan.ticket)}
+                </div>
+
+              </div>
+
+              <div class="recent-time">
+                ${scan.time.toLocaleTimeString()}
+              </div>
+
+            </div>
+
+          `
+        )
+        .join('');
+
+  }
+
+
+  /* =========================================
+     SCANNER STATUS
+  ========================================== */
+
+  function setScannerStatus(
+    type,
+    message
+  ) {
+
+    const element =
+      document.getElementById(
+        'scannerStatus'
+      );
+
+
+    element.className =
+      'scanner-status ' + type;
+
+
+    element.textContent =
+      message;
+
+  }
+
+
+  /* =========================================
+     DATE FORMAT
+  ========================================== */
+
+  function formatDateTime(
+    date
+  ) {
+
+    if (!date) {
+
+      return '—';
+
+    }
+
+
+    return new Date(
+      date
+    ).toLocaleString(
+      'en-GB',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     HTML ESCAPE
+  ========================================== */
+
+  function escapeHtml(
+    value
+  ) {
+
+    return String(
+      value || ''
+    )
+      .replace(
+        /&/g,
+        '&amp;'
+      )
+      .replace(
+        /</g,
+        '&lt;'
+      )
+      .replace(
+        />/g,
+        '&gt;'
+      )
+      .replace(
+        /"/g,
+        '&quot;'
+      )
+      .replace(
+        /'/g,
+        '&#039;'
+      );
+
+  }
+
+
+  /* =========================================
+     TOAST
+  ========================================== */
+
+  function showToast(
+    message,
+    type
+  ) {
+
+    const toast =
+      document.getElementById(
+        'toast'
+      );
+
+
+    toast.textContent =
+      message;
+
+
+    toast.className =
+      'toast ' + type;
+
+
+    setTimeout(
+      () => {
+
+        toast.className =
+          'toast';
+
+      },
+      4000
+    );
+
+  }
+
+
+  /* =========================================
+     LOGOUT
+  ========================================== */
+
+  async function logout() {
+
+    await stopScanner();
+
+    await supabaseClient.auth.signOut();
+
+    window.location.href =
+      'admin.html';
+
+  }
+
+
+  /* =========================================
+     CLEANUP
+  ========================================== */
+
+  window.addEventListener(
+    'beforeunload',
+    () => {
+
+      if (
+        html5QrCode &&
+        scannerRunning
+      ) {
+
+        html5QrCode.stop()
+          .catch(() => {});
+
+      }
+
+    }
+  );
+
+</script>
+
+</body>
+</html>
