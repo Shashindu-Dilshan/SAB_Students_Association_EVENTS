@@ -21,576 +21,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-  <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-    }
-
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
-
-    .sidebar {
-
-      position: fixed;
-
-      left: 0;
-      top: 0;
-      bottom: 0;
-
-      width: 240px;
-
-      background: #111827;
-
-      color: white;
-
-      padding: 25px 15px;
-
-      z-index: 1000;
-    }
-
-
-    .brand {
-
-      text-align: center;
-
-      padding-bottom: 25px;
-
-      border-bottom: 1px solid #374151;
-
-      margin-bottom: 20px;
-    }
-
-
-    .brand img {
-
-      max-width: 150px;
-
-      max-height: 65px;
-
-      object-fit: contain;
-
-      background: white;
-
-      padding: 8px;
-
-      border-radius: 8px;
-
-      margin-bottom: 12px;
-    }
-
-
-    .brand-title {
-
-      font-size: 17px;
-
-      font-weight: bold;
-    }
-
-
-    .brand-subtitle {
-
-      margin-top: 5px;
-
-      font-size: 11px;
-
-      color: #9ca3af;
-    }
-
-
-    .nav-item {
-
-      width: 100%;
-
-      padding: 13px 15px;
-
-      margin-bottom: 6px;
-
-      border: none;
-
-      border-radius: 8px;
-
-      background: transparent;
-
-      color: #d1d5db;
-
-      text-align: left;
-
-      font-size: 14px;
-
-      cursor: pointer;
-    }
-
-
-    .nav-item:hover {
-
-      background: #1f2937;
-
-      color: white;
-    }
-
-
-    .nav-item.active {
-
-      background: #374151;
-
-      color: white;
-
-      font-weight: bold;
-    }
-
-
-    .logout {
-
-      position: absolute;
-
-      left: 15px;
-
-      right: 15px;
-
-      bottom: 25px;
-
-      padding: 12px;
-
-      border: 1px solid #4b5563;
-
-      border-radius: 8px;
-
-      background: transparent;
-
-      color: #d1d5db;
-
-      cursor: pointer;
-    }
-
-
-    .logout:hover {
-
-      background: #374151;
-
-      color: white;
-    }
-
-
-    /* =====================================================
-       MAIN
-    ===================================================== */
-
-    .main {
-
-      margin-left: 240px;
-
-      min-height: 100vh;
-
-      padding: 30px;
-    }
-
-
-    .topbar {
-
-      display: flex;
-
-      justify-content: space-between;
-
-      align-items: center;
-
-      margin-bottom: 30px;
-    }
-
-
-    .page-title {
-
-      margin: 0;
-
-      font-size: 28px;
-    }
-
-
-    .page-subtitle {
-
-      margin-top: 6px;
-
-      color: #6b7280;
-
-      font-size: 14px;
-    }
-
-
-    .admin-user {
-
-      background: white;
-
-      padding: 10px 15px;
-
-      border-radius: 9px;
-
-      border: 1px solid #e5e7eb;
-
-      font-size: 13px;
-
-      color: #374151;
-    }
-
-
-    /* =====================================================
-       STAT CARDS
-    ===================================================== */
-
-    .stats {
-
-      display: grid;
-
-      grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-      gap: 20px;
-
-      margin-bottom: 30px;
-    }
-
-
-    .stat-card {
-
-      background: white;
-
-      border-radius: 14px;
-
-      padding: 22px;
-
-      border: 1px solid #e5e7eb;
-
-      box-shadow:
-        0 3px 10px rgba(0,0,0,0.03);
-    }
-
-
-    .stat-label {
-
-      color: #6b7280;
-
-      font-size: 13px;
-
-      margin-bottom: 10px;
-    }
-
-
-    .stat-value {
-
-      font-size: 30px;
-
-      font-weight: bold;
-
-      color: #111827;
-    }
-
-
-    .stat-description {
-
-      margin-top: 8px;
-
-      color: #9ca3af;
-
-      font-size: 12px;
-    }
-
-
-    /* =====================================================
-       CONTENT GRID
-    ===================================================== */
-
-    .content-grid {
-
-      display: grid;
-
-      grid-template-columns:
-        1.4fr
-        1fr;
-
-      gap: 20px;
-    }
-
-
-    .card {
-
-      background: white;
-
-      border: 1px solid #e5e7eb;
-
-      border-radius: 14px;
-
-      padding: 25px;
-
-      box-shadow:
-        0 3px 10px rgba(0,0,0,0.03);
-    }
-
-
-    .card-header {
-
-      display: flex;
-
-      justify-content: space-between;
-
-      align-items: center;
-
-      margin-bottom: 20px;
-    }
-
-
-    .card-title {
-
-      margin: 0;
-
-      font-size: 18px;
-    }
-
-
-    .event-card {
-
-      border: 1px solid #e5e7eb;
-
-      border-radius: 10px;
-
-      padding: 18px;
-
-      margin-bottom: 12px;
-    }
-
-
-    .event-name {
-
-      font-weight: bold;
-
-      font-size: 17px;
-
-      margin-bottom: 10px;
-    }
-
-
-    .event-detail {
-
-      color: #6b7280;
-
-      font-size: 13px;
-
-      margin-top: 5px;
-    }
-
-
-    /* =====================================================
-       TABLE
-    ===================================================== */
-
-    .table-container {
-
-      overflow-x: auto;
-    }
-
-
-    table {
-
-      width: 100%;
-
-      border-collapse: collapse;
-    }
-
-
-    th {
-
-      text-align: left;
-
-      padding: 12px;
-
-      font-size: 11px;
-
-      text-transform: uppercase;
-
-      letter-spacing: 0.8px;
-
-      color: #6b7280;
-
-      background: #f9fafb;
-
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-
-    td {
-
-      padding: 13px 12px;
-
-      font-size: 13px;
-
-      border-bottom: 1px solid #f0f0f0;
-
-      color: #374151;
-    }
-
-
-    .status {
-
-      display: inline-block;
-
-      padding: 5px 9px;
-
-      border-radius: 20px;
-
-      font-size: 11px;
-
-      font-weight: bold;
-    }
-
-
-    .status.sent {
-
-      background: #dcfce7;
-
-      color: #166534;
-    }
-
-
-    .status.pending {
-
-      background: #fef3c7;
-
-      color: #92400e;
-    }
-
-
-    .status.failed {
-
-      background: #fee2e2;
-
-      color: #991b1b;
-    }
-
-
-    .status.active {
-
-      background: #dbeafe;
-
-      color: #1e40af;
-    }
-
-
-    .status.used {
-
-      background: #dcfce7;
-
-      color: #166534;
-    }
-
-
-    /* =====================================================
-       LOADING
-    ===================================================== */
-
-    .loading {
-
-      text-align: center;
-
-      padding: 40px;
-
-      color: #6b7280;
-    }
-
-
-    .error-box {
-
-      background: #fee2e2;
-
-      color: #991b1b;
-
-      padding: 15px;
-
-      border-radius: 8px;
-
-      margin-bottom: 20px;
-
-      display: none;
-    }
-
-
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
-
-    @media (max-width: 1000px) {
-
-      .stats {
-
-        grid-template-columns:
-          repeat(2, 1fr);
-      }
-
-      .content-grid {
-
-        grid-template-columns: 1fr;
-      }
-
-    }
-
-
-    @media (max-width: 700px) {
-
-      .sidebar {
-
-        position: relative;
-
-        width: 100%;
-
-        height: auto;
-      }
-
-
-      .main {
-
-        margin-left: 0;
-
-        padding: 20px;
-      }
-
-
-      .logout {
-
-        position: static;
-
-        width: 100%;
-
-        margin-top: 15px;
-      }
-
-
-      .stats {
-
-        grid-template-columns: 1fr;
-      }
-
-
-      .topbar {
-
-        align-items: flex-start;
-
-        flex-direction: column;
-
-        gap: 15px;
-      }
-
-    }
-
-  </style>
-
 </head>
 
 
@@ -603,80 +33,68 @@
 
 <aside class="sidebar">
 
+    <div class="logo-area">
 
-  <div class="brand">
+        <img
+            src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+            alt="SABSA Logo"
+        >
 
-    <img
-      src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
-      alt="SABSA"
+        <h2>SABSA E-Ticket</h2>
+
+        <p>Administration Panel</p>
+
+    </div>
+
+
+    <nav class="nav-menu">
+
+        <a
+            href="admin-dashboard.html"
+            class="active"
+        >
+            Dashboard
+        </a>
+
+        <a
+            href="participants.html"
+        >
+            Participants
+        </a>
+
+        <a
+            href="tickets.html"
+        >
+            Tickets
+        </a>
+
+        <a
+            href="event.html"
+        >
+            Event
+        </a>
+
+        <a
+            href="scanner.html"
+        >
+            Scanner
+        </a>
+
+        <a
+            href="settings.html"
+        >
+            Settings
+        </a>
+
+    </nav>
+
+
+    <button
+        class="logout-btn"
+        onclick="logout()"
     >
-
-    <div class="brand-title">
-      SABSA E-Ticket
-    </div>
-
-    <div class="brand-subtitle">
-      Administration Panel
-    </div>
-
-  </div>
-
-
-  <button
-    class="nav-item active"
-    onclick="showDashboard()"
-  >
-    Dashboard
-  </button>
-
-
-  <button
-    class="nav-item"
-    onclick="showComingSoon('Participants')"
-  >
-    Participants
-  </button>
-
-
-  <button
-    class="nav-item"
-    onclick="showComingSoon('Tickets')"
-  >
-    Tickets
-  </button>
-
-
-  <button
-    class="nav-item"
-    onclick="showComingSoon('Event Management')"
-  >
-    Event
-  </button>
-
-
-  <button
-    class="nav-item"
-    onclick="openScanner()"
-  >
-    Scanner
-  </button>
-
-
-  <button
-    class="nav-item"
-    onclick="showComingSoon('Settings')"
-  >
-    Settings
-  </button>
-
-
-  <button
-    class="logout"
-    onclick="logout()"
-  >
-    Logout
-  </button>
-
+        Logout
+    </button>
 
 </aside>
 
@@ -1737,38 +1155,21 @@ async function logout() {
 // SCANNER
 // =========================================================
 
-function openScanner() {
 
-  window.location.href =
-    "scanner.html";
-
-}
 
 
 // =========================================================
 // COMING SOON
 // =========================================================
 
-function showComingSoon(
-  section
-) {
 
-  alert(
-    `${section} management will be added in the next stage.`
-  );
-
-}
 
 
 // =========================================================
 // DASHBOARD
 // =========================================================
 
-function showDashboard() {
 
-  window.location.reload();
-
-}
 
 
 // =========================================================
