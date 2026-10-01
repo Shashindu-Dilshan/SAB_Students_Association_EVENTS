@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Event Management - SABSA E-Ticket System</title>
+
+  <link rel="stylesheet" href="assets/css/admin.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ================================
+       EVENT PAGE
+    ================================= */
+
+    .event-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .form-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .form-help {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .logo-preview {
+      margin-top: 10px;
+      width: 100%;
+      min-height: 150px;
+      border: 1px dashed #d1d5db;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #f9fafb;
+    }
+
+    .logo-preview img {
+      max-width: 180px;
+      max-height: 120px;
+      object-fit: contain;
+    }
+
+    .logo-placeholder {
+      color: #9ca3af;
+      font-size: 13px;
+    }
+
+    .control-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 15px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+    }
+
+    .control-info {
+      flex: 1;
+    }
+
+    .control-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+
+    .control-description {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #6b7280;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+      background: #d1d5db;
+      border-radius: 999px;
+      transition: 0.2s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 3px;
+      top: 3px;
+      background: #ffffff;
+      border-radius: 50%;
+      transition: 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .switch input:checked + .slider {
+      background: #2563eb;
+    }
+
+    .switch input:checked + .slider::before {
+      transform: translateX(22px);
+    }
+
+    .event-preview {
+      text-align: center;
+    }
+
+    .preview-logo {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      margin: 0 auto 15px;
+      border-radius: 10px;
+    }
+
+    .preview-event-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .preview-event-code {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .preview-detail {
+      display: flex;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f0f0f0;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .preview-detail:last-child {
+      border-bottom: 0;
+    }
+
+    .preview-label {
+      width: 75px;
+      color: #6b7280;
+      flex-shrink: 0;
+    }
+
+    .preview-value {
+      color: #111827;
+      font-weight: 500;
+    }
+
+    .save-bar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .save-btn {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 20px;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .save-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .save-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .reset-btn {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px 18px;
+      background: #ffffff;
+      color: #374151;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .reset-btn:hover {
+      background: #f9fafb;
+    }
+
+    .message {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .message.success {
+      display: block;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #047857;
+    }
+
+    .message.error {
+      display: block;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+
+    .loading {
+      padding: 30px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .event-selector-wrap {
+      margin-bottom: 20px;
+    }
+
+    .event-selector-label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    @media (max-width: 1000px) {
+      .event-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-section {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full-width {
+        grid-column: auto;
+      }
+
+      .save-bar {
+        flex-direction: column-reverse;
+        align-items: stretch;
+      }
+
+      .save-btn,
+      .reset-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================
+       SIDEBAR
+  ========================== -->
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+      <img
+        src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+        alt="SABSA Logo"
+      >
+
+      <div>
+        <div class="brand-title">SABSA</div>
+        <div class="brand-subtitle">E-Ticket System</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+
+      <a href="admin-dashboard.html" class="nav-item">
+        <span class="nav-icon">▦</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="participants.html" class="nav-item">
+        <span class="nav-icon">♙</span>
+        <span>Participants</span>
+      </a>
+
+      <a href="tickets.html" class="nav-item">
+        <span class="nav-icon">▤</span>
+        <span>Tickets</span>
+      </a>
+
+      <a href="event.html" class="nav-item active">
+        <span class="nav-icon">◫</span>
+        <span>Event</span>
+      </a>
+
+      <a href="scanner.html" class="nav-item">
+        <span class="nav-icon">▣</span>
+        <span>Scanner</span>
+      </a>
+
+      <a href="settings.html" class="nav-item">
+        <span class="nav-icon">⚙</span>
+        <span>Settings</span>
+      </a>
+
+    </nav>
+
+    <div class="sidebar-bottom">
+
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="userAvatar">A</div>
+
+        <div class="sidebar-user-info">
+          <div id="userName">Admin</div>
+          <div id="userEmail">Loading...</div>
+        </div>
+      </div>
+
+      <button class="logout-btn" onclick="logout()">
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =========================
+       MAIN
+  ========================== -->
+  <main class="main-content">
+
+    <div class="page-header">
+
+      <div>
+        <h1 class="page-title">Event Management</h1>
+
+        <p class="page-subtitle">
+          Manage event details and registration settings.
+        </p>
+      </div>
+
+      <a href="admin-dashboard.html" class="back-btn">
+        ← Dashboard
+      </a>
+
+    </div>
+
+
+    <!-- Event selector -->
+    <div class="event-selector-wrap">
+
+      <label class="event-selector-label" for="eventSelect">
+        Select Event
+      </label>
+
+      <select
+        id="eventSelect"
+        class="form-select"
+        onchange="eventChanged()"
+      >
+        <option value="">Loading events...</option>
+      </select>
+
+    </div>
+
+
+    <div id="message" class="message"></div>
+
+
+    <div id="loading" class="loading">
+      Loading event information...
+    </div>
+
+
+    <div id="eventContent" style="display:none;">
+
+      <div class="event-layout">
+
+        <!-- =====================
+             LEFT
+        ====================== -->
+        <div>
+
+          <div class="card">
+
+            <div class="card-header">
+              <div>
+                <div class="card-title">Event Information</div>
+
+                <div class="form-help">
+                  Update the information displayed throughout the
+                  e-ticket system.
+                </div>
+              </div>
+            </div>
+
+
+            <div class="form-section">
+
+              <!-- Event Name -->
+              <div class="form-group full-width">
+
+                <label class="form-label" for="eventName">
+                  Event Name
+                </label>
+
+                <input
+                  type="text"
+                  id="eventName"
+                  class="form-input"
+                  placeholder="Enter event name"
+                >
+
+              </div>
+
+
+              <!-- Event Code -->
+              <div class="form-group">
+
+                <label class="form-label" for="eventCode">
+                  Event Code
+                </label>
+
+                <input
+                  type="text"
+                  id="eventCode"
+                  class="form-input"
+                  placeholder="e.g. SAB26"
+                  maxlength="20"
+                >
+
+                <div class="form-help">
+                  Used when generating ticket IDs.
+                </div>
+
+              </div>
+
+
+              <!-- Date -->
+              <div class="form-group">
+
+                <label class="form-label" for="eventDate">
+                  Event Date
+                </label>
+
+                <input
+                  type="date"
+                  id="eventDate"
+                  class="form-input"
+                >
+
+              </div>
+
+
+              <!-- Time -->
+              <div class="form-group">
+
+                <label class="form-label" for="eventTime">
+                  Event Time
+                </label>
+
+                <input
+                  type="text"
+                  id="eventTime"
+                  class="form-input"
+                  placeholder="e.g. 10:00 AM"
+                >
+
+              </div>
+
+
+              <!-- Venue -->
+              <div class="form-group">
+
+                <label class="form-label" for="eventVenue">
+                  Venue
+                </label>
+
+                <input
+                  type="text"
+                  id="eventVenue"
+                  class="form-input"
+                  placeholder="Enter venue"
+                >
+
+              </div>
+
+
+              <!-- Logo -->
+              <div class="form-group full-width">
+
+                <label class="form-label" for="eventLogo">
+                  Logo URL
+                </label>
+
+                <input
+                  type="url"
+                  id="eventLogo"
+                  class="form-input"
+                  placeholder="https://example.com/logo.png"
+                  oninput="updateLogoPreview()"
+                >
+
+                <div class="form-help">
+                  Enter a publicly accessible image URL.
+                </div>
+
+                <div class="logo-preview" id="logoPreview">
+                  <span class="logo-placeholder">
+                    Logo preview
+                  </span>
+                </div>
+
+              </div>
+
+
+              <!-- Description -->
+              <div class="form-group full-width">
+
+                <label class="form-label" for="eventDescription">
+                  Description
+                </label>
+
+                <textarea
+                  id="eventDescription"
+                  class="form-textarea"
+                  placeholder="Enter event description"
+                ></textarea>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- EVENT CONTROLS -->
+          <div class="card" style="margin-top:24px;">
+
+            <div class="card-header">
+
+              <div>
+                <div class="card-title">
+                  Event Controls
+                </div>
+
+                <div class="form-help">
+                  Control registration and QR scanner availability.
+                </div>
+              </div>
+
+            </div>
+
+
+            <div class="control-list">
+
+              <!-- Registration -->
+              <div class="control-item">
+
+                <div class="control-info">
+
+                  <div class="control-title">
+                    Registration Open
+                  </div>
+
+                  <div class="control-description">
+                    When enabled, participants can register
+                    for this event.
+                  </div>
+
+                </div>
+
+                <label class="switch">
+
+                  <input
+                    type="checkbox"
+                    id="registrationOpen"
+                  >
+
+                  <span class="slider"></span>
+
+                </label>
+
+              </div>
+
+
+              <!-- Scanner -->
+              <div class="control-item">
+
+                <div class="control-info">
+
+                  <div class="control-title">
+                    Scanner Enabled
+                  </div>
+
+                  <div class="control-description">
+                    When enabled, staff can scan QR codes
+                    and record attendance.
+                  </div>
+
+                </div>
+
+                <label class="switch">
+
+                  <input
+                    type="checkbox"
+                    id="scannerEnabled"
+                  >
+
+                  <span class="slider"></span>
+
+                </label>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- SAVE -->
+          <div class="save-bar">
+
+            <button
+              type="button"
+              class="reset-btn"
+              onclick="resetForm()"
+            >
+              Reset
+            </button>
+
+            <button
+              type="button"
+              class="save-btn"
+              id="saveBtn"
+              onclick="saveEvent()"
+            >
+              Save Changes
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- =====================
+             RIGHT PREVIEW
+        ====================== -->
+        <div>
+
+          <div class="card">
+
+            <div class="card-header">
+
+              <div>
+                <div class="card-title">
+                  Event Preview
+                </div>
+
+                <div class="form-help">
+                  Preview of the event information.
+                </div>
+              </div>
+
+            </div>
+
+
+            <div class="event-preview">
+
+              <img
+                id="previewLogo"
+                class="preview-logo"
+                src=""
+                alt="Event Logo"
+                style="display:none;"
+              >
+
+              <div
+                id="previewLogoPlaceholder"
+                style="
+                  width:100px;
+                  height:100px;
+                  margin:0 auto 15px;
+                  border-radius:10px;
+                  background:#f3f4f6;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  color:#9ca3af;
+                  font-size:12px;
+                "
+              >
+                No Logo
+              </div>
+
+
+              <div
+                class="preview-event-name"
+                id="previewEventName"
+              >
+                Event Name
+              </div>
+
+
+              <div
+                class="preview-event-code"
+                id="previewEventCode"
+              >
+                EVENT
+              </div>
+
+
+              <div class="preview-detail">
+
+                <div class="preview-label">
+                  Date
+                </div>
+
+                <div
+                  class="preview-value"
+                  id="previewDate"
+                >
+                  —
+                </div>
+
+              </div>
+
+
+              <div class="preview-detail">
+
+                <div class="preview-label">
+                  Time
+                </div>
+
+                <div
+                  class="preview-value"
+                  id="previewTime"
+                >
+                  —
+                </div>
+
+              </div>
+
+
+              <div class="preview-detail">
+
+                <div class="preview-label">
+                  Venue
+                </div>
+
+                <div
+                  class="preview-value"
+                  id="previewVenue"
+                >
+                  —
+                </div>
+
+              </div>
+
+
+              <div class="preview-detail">
+
+                <div class="preview-label">
+                  Registration
+                </div>
+
+                <div
+                  class="preview-value"
+                  id="previewRegistration"
+                >
+                  —
+                </div>
+
+              </div>
+
+
+              <div class="preview-detail">
+
+                <div class="preview-label">
+                  Scanner
+                </div>
+
+                <div
+                  class="preview-value"
+                  id="previewScanner"
+                >
+                  —
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+<script>
+
+  /* ============================================
+     SUPABASE CONFIGURATION
+  ============================================= */
+
+  const SUPABASE_URL =
+    'https://xdaxxgsvorvfpnxteikv.supabase.co';
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    'sb_publishable_wRysyx1ek-J7XrFOLxXfnA_Fp_0UsFO';
+
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  /* ============================================
+     GLOBAL VARIABLES
+  ============================================= */
+
+  let currentUser = null;
+  let currentAdmin = null;
+  let events = [];
+  let currentEvent = null;
+
+
+  /* ============================================
+     INITIALIZE
+  ============================================= */
+
+  document.addEventListener('DOMContentLoaded', async () => {
+
+    try {
+
+      await checkAuthentication();
+
+      await loadEvents();
+
+      setupLivePreview();
+
+    } catch (error) {
+
+      console.error(error);
+
+      showMessage(
+        error.message || 'Unable to load event information.',
+        'error'
+      );
+
+      document.getElementById('loading').style.display = 'none';
+
+    }
+
+  });
+
+
+  /* ============================================
+     AUTHENTICATION
+  ============================================= */
+
+  async function checkAuthentication() {
+
+    const {
+      data: {
+        session
+      }
+    } = await supabaseClient.auth.getSession();
+
+
+    if (!session) {
+
+      window.location.href = 'admin.html';
+
+      throw new Error('Authentication required.');
+
+    }
+
+
+    currentUser = session.user;
+
+
+    const {
+      data: admin,
+      error
+    } = await supabaseClient
+      .from('admins')
+      .select('id, email, role')
+      .eq('id', currentUser.id)
+      .maybeSingle();
+
+
+    if (error) {
+
+      console.error(error);
+
+      throw new Error(
+        'Unable to verify administrator access.'
+      );
+
+    }
+
+
+    if (
+      !admin ||
+      !['ADMIN', 'STAFF'].includes(admin.role)
+    ) {
+
+      await supabaseClient.auth.signOut();
+
+      window.location.href = 'admin.html';
+
+      throw new Error(
+        'You do not have permission to access this page.'
+      );
+
+    }
+
+
+    currentAdmin = admin;
+
+
+    document.getElementById('userEmail').textContent =
+      admin.email || currentUser.email || 'Admin';
+
+
+    document.getElementById('userName').textContent =
+      admin.role === 'ADMIN'
+        ? 'Administrator'
+        : 'Staff';
+
+
+    document.getElementById('userAvatar').textContent =
+      admin.role === 'ADMIN'
+        ? 'A'
+        : 'S';
+
+  }
+
+
+  /* ============================================
+     LOAD EVENTS
+  ============================================= */
+
+  async function loadEvents() {
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from('events')
+      .select('*')
+      .order('created_at', {
+        ascending: false
+      });
+
+
+    if (error) {
+
+      console.error(error);
+
+      throw new Error(
+        'Unable to load events: ' + error.message
+      );
+
+    }
+
+
+    events = data || [];
+
+
+    const select =
+      document.getElementById('eventSelect');
+
+
+    select.innerHTML = '';
+
+
+    if (!events.length) {
+
+      select.innerHTML =
+        '<option value="">No events found</option>';
+
+      document.getElementById('loading').style.display =
+        'none';
+
+      return;
+
+    }
+
+
+    events.forEach(event => {
+
+      const option =
+        document.createElement('option');
+
+      option.value = event.id;
+
+      option.textContent =
+        `${event.event_name} (${event.event_code})`;
+
+      select.appendChild(option);
+
+    });
+
+
+    select.value = events[0].id;
+
+    await loadEvent(events[0].id);
+
+  }
+
+
+  /* ============================================
+     EVENT CHANGED
+  ============================================= */
+
+  async function eventChanged() {
+
+    const eventId =
+      document.getElementById('eventSelect').value;
+
+
+    if (!eventId) return;
+
+
+    await loadEvent(eventId);
+
+  }
+
+
+  /* ============================================
+     LOAD SINGLE EVENT
+  ============================================= */
+
+  async function loadEvent(eventId) {
+
+    document.getElementById('loading').style.display =
+      'block';
+
+    document.getElementById('eventContent').style.display =
+      'none';
+
+
+    const {
+      data: event,
+      error
+    } = await supabaseClient
+      .from('events')
+      .select('*')
+      .eq('id', eventId)
+      .single();
+
+
+    if (error) {
+
+      console.error(error);
+
+      document.getElementById('loading').style.display =
+        'none';
+
+      showMessage(
+        'Unable to load event: ' + error.message,
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    currentEvent = event;
+
+
+    populateForm(event);
+
+    updatePreview();
+
+    document.getElementById('loading').style.display =
+      'none';
+
+    document.getElementById('eventContent').style.display =
+      'block';
+
+  }
+
+
+  /* ============================================
+     POPULATE FORM
+  ============================================= */
+
+  function populateForm(event) {
+
+    document.getElementById('eventName').value =
+      event.event_name || '';
+
+    document.getElementById('eventCode').value =
+      event.event_code || '';
+
+    document.getElementById('eventDate').value =
+      event.event_date || '';
+
+    document.getElementById('eventTime').value =
+      event.event_time || '';
+
+    document.getElementById('eventVenue').value =
+      event.venue || '';
+
+    document.getElementById('eventLogo').value =
+      event.logo_url || '';
+
+    document.getElementById('eventDescription').value =
+      event.description || '';
+
+    document.getElementById('registrationOpen').checked =
+      event.registration_open === true;
+
+    document.getElementById('scannerEnabled').checked =
+      event.scanner_enabled === true;
+
+
+    updateLogoPreview();
+
+  }
+
+
+  /* ============================================
+     SAVE EVENT
+  ============================================= */
+
+  async function saveEvent() {
+
+    if (!currentEvent) {
+
+      showMessage(
+        'No event selected.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    const eventName =
+      document.getElementById('eventName').value.trim();
+
+    const eventCode =
+      document.getElementById('eventCode').value.trim();
+
+    const eventDate =
+      document.getElementById('eventDate').value;
+
+    const eventTime =
+      document.getElementById('eventTime').value.trim();
+
+    const venue =
+      document.getElementById('eventVenue').value.trim();
+
+    const logoUrl =
+      document.getElementById('eventLogo').value.trim();
+
+    const description =
+      document.getElementById('eventDescription').value.trim();
+
+    const registrationOpen =
+      document.getElementById('registrationOpen').checked;
+
+    const scannerEnabled =
+      document.getElementById('scannerEnabled').checked;
+
+
+    /* VALIDATION */
+
+    if (!eventName) {
+
+      showMessage(
+        'Event Name is required.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    if (!eventCode) {
+
+      showMessage(
+        'Event Code is required.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    if (!/^[A-Za-z0-9_-]+$/.test(eventCode)) {
+
+      showMessage(
+        'Event Code can contain only letters, numbers, hyphens and underscores.',
+        'error'
+      );
+
+      return;
+
+    }
+
+
+    const saveButton =
+      document.getElementById('saveBtn');
+
+
+    saveButton.disabled = true;
+
+    saveButton.textContent =
+      'Saving...';
+
+
+    try {
+
+      const {
+        data,
+        error
+      } = await supabaseClient
+        .from('events')
+        .update({
+
+          event_name: eventName,
+
+          event_code: eventCode,
+
+          event_date:
+            eventDate || null,
+
+          event_time:
+            eventTime || null,
+
+          venue:
+            venue || null,
+
+          description:
+            description || null,
+
+          logo_url:
+            logoUrl || null,
+
+          registration_open:
+            registrationOpen,
+
+          scanner_enabled:
+            scannerEnabled
+
+        })
+        .eq('id', currentEvent.id)
+        .select()
+        .single();
+
+
+      if (error) {
+
+        console.error(error);
+
+        if (
+          error.code === '23505' ||
+          error.message
+            .toLowerCase()
+            .includes('event_code')
+        ) {
+
+          throw new Error(
+            'This Event Code is already being used by another event.'
+          );
+
+        }
+
+        throw new Error(
+          error.message
+        );
+
+      }
+
+
+      currentEvent = data;
+
+
+      /*
+       * Update local event list
+       */
+
+      const index =
+        events.findIndex(
+          event => event.id === currentEvent.id
+        );
+
+
+      if (index !== -1) {
+
+        events[index] = currentEvent;
+
+      }
+
+
+      /*
+       * Update selector text
+       */
+
+      const selectedOption =
+        document.querySelector(
+          `#eventSelect option[value="${currentEvent.id}"]`
+        );
+
+
+      if (selectedOption) {
+
+        selectedOption.textContent =
+          `${currentEvent.event_name} (${currentEvent.event_code})`;
+
+      }
+
+
+      updatePreview();
+
+
+      showMessage(
+        'Event information saved successfully.',
+        'success'
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showMessage(
+        error.message ||
+        'Failed to save event.',
+        'error'
+      );
+
+    } finally {
+
+      saveButton.disabled = false;
+
+      saveButton.textContent =
+        'Save Changes';
+
+    }
+
+  }
+
+
+  /* ============================================
+     RESET FORM
+  ============================================= */
+
+  function resetForm() {
+
+    if (!currentEvent) return;
+
+    populateForm(currentEvent);
+
+    updatePreview();
+
+    showMessage(
+      'Changes have been reset.',
+      'success'
+    );
+
+  }
+
+
+  /* ============================================
+     LOGO PREVIEW
+  ============================================= */
+
+  function updateLogoPreview() {
+
+    const url =
+      document.getElementById('eventLogo').value.trim();
+
+    const preview =
+      document.getElementById('logoPreview');
+
+
+    if (!url) {
+
+      preview.innerHTML =
+        '<span class="logo-placeholder">Logo preview</span>';
+
+      return;
+
+    }
+
+
+    preview.innerHTML = '';
+
+
+    const image =
+      document.createElement('img');
+
+    image.src = url;
+
+    image.alt = 'Event Logo';
+
+
+    image.onerror = function () {
+
+      preview.innerHTML =
+        '<span class="logo-placeholder">Unable to load logo</span>';
+
+    };
+
+
+    preview.appendChild(image);
+
+  }
+
+
+  /* ============================================
+     LIVE PREVIEW
+  ============================================= */
+
+  function setupLivePreview() {
+
+    const fields = [
+
+      'eventName',
+      'eventCode',
+      'eventDate',
+      'eventTime',
+      'eventVenue',
+      'registrationOpen',
+      'scannerEnabled'
+
+    ];
+
+
+    fields.forEach(id => {
+
+      const element =
+        document.getElementById(id);
+
+      element.addEventListener(
+        'input',
+        updatePreview
+      );
+
+      element.addEventListener(
+        'change',
+        updatePreview
+      );
+
+    });
+
+  }
+
+
+  function updatePreview() {
+
+    const name =
+      document.getElementById('eventName').value.trim();
+
+    const code =
+      document.getElementById('eventCode').value.trim();
+
+    const date =
+      document.getElementById('eventDate').value;
+
+    const time =
+      document.getElementById('eventTime').value.trim();
+
+    const venue =
+      document.getElementById('eventVenue').value.trim();
+
+    const registration =
+      document.getElementById('registrationOpen').checked;
+
+    const scanner =
+      document.getElementById('scannerEnabled').checked;
+
+
+    document.getElementById('previewEventName').textContent =
+      name || 'Event Name';
+
+
+    document.getElementById('previewEventCode').textContent =
+      code || 'EVENT';
+
+
+    document.getElementById('previewTime').textContent =
+      time || '—';
+
+
+    document.getElementById('previewVenue').textContent =
+      venue || '—';
+
+
+    document.getElementById('previewRegistration').textContent =
+      registration
+        ? 'Open'
+        : 'Closed';
+
+
+    document.getElementById('previewScanner').textContent =
+      scanner
+        ? 'Enabled'
+        : 'Disabled';
+
+
+    if (date) {
+
+      const dateObject =
+        new Date(date + 'T00:00:00');
+
+      document.getElementById('previewDate').textContent =
+        dateObject.toLocaleDateString(
+          'en-GB',
+          {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          }
+        );
+
+    } else {
+
+      document.getElementById('previewDate').textContent =
+        '—';
+
+    }
+
+
+    updatePreviewLogo();
+
+  }
+
+
+  function updatePreviewLogo() {
+
+    const url =
+      document.getElementById('eventLogo').value.trim();
+
+    const image =
+      document.getElementById('previewLogo');
+
+    const placeholder =
+      document.getElementById('previewLogoPlaceholder');
+
+
+    if (!url) {
+
+      image.style.display =
+        'none';
+
+      placeholder.style.display =
+        'flex';
+
+      return;
+
+    }
+
+
+    image.src = url;
+
+    image.style.display =
+      'block';
+
+    placeholder.style.display =
+      'none';
+
+
+    image.onerror = function () {
+
+      image.style.display =
+        'none';
+
+      placeholder.style.display =
+        'flex';
+
+    };
+
+  }
+
+
+  /* ============================================
+     MESSAGE
+  ============================================= */
+
+  function showMessage(message, type) {
+
+    const element =
+      document.getElementById('message');
+
+
+    element.textContent =
+      message;
+
+    element.className =
+      'message ' + type;
+
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+
+
+    setTimeout(() => {
+
+      element.className =
+        'message';
+
+    }, 5000);
+
+  }
+
+
+  /* ============================================
+     LOGOUT
+  ============================================= */
+
+  async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    window.location.href =
+      'admin.html';
+
+  }
+
+</script>
+
+</body>
+</html>
