@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Settings - SABSA E-Ticket System</title>
+
+  <link rel="stylesheet" href="assets/css/admin.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* =========================================
+       SETTINGS PAGE
+    ========================================= */
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .settings-full {
+      grid-column: 1 / -1;
+    }
+
+    .setting-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 15px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .setting-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .setting-row:first-child {
+      padding-top: 0;
+    }
+
+    .setting-label {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .setting-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111827;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-badge.connected,
+    .status-badge.active,
+    .status-badge.enabled {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .status-badge.manual {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .status-badge.warning {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .status-badge.neutral {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .account-avatar-large {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .account-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .account-email {
+      margin-top: 4px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .info-box {
+      padding: 14px 16px;
+      border-radius: 9px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      color: #4b5563;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .info-box strong {
+      color: #111827;
+    }
+
+    .security-box {
+      padding: 16px;
+      border-radius: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .security-box strong {
+      color: #1e3a8a;
+    }
+
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .health-item {
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #ffffff;
+    }
+
+    .health-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .health-status {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .health-status.ok {
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    .health-status.error {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    .refresh-btn {
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #374151;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover {
+      background: #f9fafb;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logout-large {
+      width: 100%;
+      margin-top: 18px;
+      padding: 11px;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .logout-large:hover {
+      background: #fee2e2;
+    }
+
+    .loading-text {
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .settings-full {
+        grid-column: auto;
+      }
+
+      .health-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .health-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .setting-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .setting-value {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================================
+       SIDEBAR
+  ========================================== -->
+
+  <aside class="sidebar">
+
+    <div class="sidebar-brand">
+
+      <img
+        src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
+        alt="SABSA Logo"
+      >
+
+      <div>
+        <div class="brand-title">SABSA</div>
+        <div class="brand-subtitle">E-Ticket System</div>
+      </div>
+
+    </div>
+
+
+    <nav class="sidebar-nav">
+
+      <a href="admin-dashboard.html" class="nav-item">
+        <span class="nav-icon">▦</span>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="participants.html" class="nav-item">
+        <span class="nav-icon">♙</span>
+        <span>Participants</span>
+      </a>
+
+      <a href="tickets.html" class="nav-item">
+        <span class="nav-icon">▤</span>
+        <span>Tickets</span>
+      </a>
+
+      <a href="event.html" class="nav-item">
+        <span class="nav-icon">◫</span>
+        <span>Event</span>
+      </a>
+
+      <a href="scanner.html" class="nav-item">
+        <span class="nav-icon">▣</span>
+        <span>Scanner</span>
+      </a>
+
+      <a href="settings.html" class="nav-item active">
+        <span class="nav-icon">⚙</span>
+        <span>Settings</span>
+      </a>
+
+    </nav>
+
+
+    <div class="sidebar-bottom">
+
+      <div class="sidebar-user">
+
+        <div
+          class="sidebar-user-avatar"
+          id="userAvatar"
+        >
+          A
+        </div>
+
+        <div class="sidebar-user-info">
+
+          <div id="userName">
+            Admin
+          </div>
+
+          <div id="userEmail">
+            Loading...
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="logout-btn"
+        onclick="logout()"
+      >
+        Logout
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- =========================================
+       MAIN CONTENT
+  ========================================== -->
+
+  <main class="main-content">
+
+    <div class="page-header">
+
+      <div>
+
+        <h1 class="page-title">
+          Settings
+        </h1>
+
+        <p class="page-subtitle">
+          View system configuration, account information and service status.
+        </p>
+
+      </div>
+
+
+      <a
+        href="admin-dashboard.html"
+        class="back-btn"
+      >
+        ← Dashboard
+      </a>
+
+    </div>
+
+
+    <div class="settings-grid">
+
+      <!-- =====================================
+           ACCOUNT
+      ====================================== -->
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            Account
+          </div>
+
+        </div>
+
+
+        <div
+          class="account-avatar-large"
+          id="largeAvatar"
+        >
+          A
+        </div>
+
+
+        <div
+          class="account-name"
+          id="accountName"
+        >
+          Administrator
+        </div>
+
+
+        <div
+          class="account-email"
+          id="accountEmail"
+        >
+          Loading...
+        </div>
+
+
+        <div
+          class="role-badge"
+          id="accountRole"
+        >
+          ADMIN
+        </div>
+
+
+        <button
+          class="logout-large"
+          onclick="logout()"
+        >
+          Sign Out
+        </button>
+
+      </div>
+
+
+      <!-- =====================================
+           SYSTEM INFORMATION
+      ====================================== -->
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            System Information
+          </div>
+
+        </div>
+
+
+        <div class="setting-list">
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              System Name
+            </div>
+
+            <div class="setting-value">
+              SABSA E-Ticket System
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              System Version
+            </div>
+
+            <div class="setting-value">
+              1.0.0
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Database
+            </div>
+
+            <div class="setting-value">
+              Supabase
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Hosting
+            </div>
+
+            <div class="setting-value">
+              GitHub Pages
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Email Provider
+            </div>
+
+            <div class="setting-value">
+              Resend
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           CURRENT EVENT
+      ====================================== -->
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            Current Event
+          </div>
+
+        </div>
+
+
+        <div class="setting-list">
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Event Name
+            </div>
+
+            <div
+              class="setting-value"
+              id="currentEventName"
+            >
+              <span class="loading-text">
+                Loading...
+              </span>
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Event Code
+            </div>
+
+            <div
+              class="setting-value"
+              id="currentEventCode"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Event Date
+            </div>
+
+            <div
+              class="setting-value"
+              id="currentEventDate"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Registration
+            </div>
+
+            <div
+              class="setting-value"
+              id="currentRegistration"
+            >
+              —
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Scanner
+            </div>
+
+            <div
+              class="setting-value"
+              id="currentScanner"
+            >
+              —
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           TICKET SETTINGS
+      ====================================== -->
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            Ticket Settings
+          </div>
+
+        </div>
+
+
+        <div class="setting-list">
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Ticket ID
+            </div>
+
+            <div class="setting-value">
+              Event Code + Random Code
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Example
+            </div>
+
+            <div class="setting-value">
+              TEST26-RXHJCL
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              QR Content
+            </div>
+
+            <div class="setting-value">
+              Ticket ID
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Active Ticket
+            </div>
+
+            <div class="setting-value">
+              <span class="status-badge active">
+                <span class="status-dot"></span>
+                ACTIVE
+              </span>
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Used Ticket
+            </div>
+
+            <div class="setting-value">
+              <span class="status-badge neutral">
+                USED
+              </span>
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Cancelled Ticket
+            </div>
+
+            <div class="setting-value">
+              <span class="status-badge warning">
+                CANCELLED
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           EMAIL SETTINGS
+      ====================================== -->
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            Email Settings
+          </div>
+
+        </div>
+
+
+        <div class="setting-list">
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Sending Mode
+            </div>
+
+            <div class="setting-value">
+
+              <span class="status-badge manual">
+                <span class="status-dot"></span>
+                MANUAL
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Email Provider
+            </div>
+
+            <div class="setting-value">
+              Resend
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Sender
+            </div>
+
+            <div class="setting-value">
+              Configured in Edge Function
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              API Key
+            </div>
+
+            <div class="setting-value">
+              <span class="status-badge connected">
+                Secure
+              </span>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="security-box"
+          style="margin-top:20px;"
+        >
+          <strong>Security:</strong>
+          Email API credentials are stored securely in
+          Supabase Edge Function Secrets and are never exposed
+          in this browser application.
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           SCANNER SETTINGS
+      ====================================== -->
+
+      <div class="card">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            Scanner & Attendance
+          </div>
+
+        </div>
+
+
+        <div class="setting-list">
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              QR Scanner
+            </div>
+
+            <div class="setting-value">
+              <span class="status-badge enabled">
+                <span class="status-dot"></span>
+                Enabled
+              </span>
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Attendance Recording
+            </div>
+
+            <div class="setting-value">
+              Supabase Database
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Duplicate Protection
+            </div>
+
+            <div class="setting-value">
+              Enabled
+            </div>
+
+          </div>
+
+
+          <div class="setting-row">
+
+            <div class="setting-label">
+              Manual Ticket Verification
+            </div>
+
+            <div class="setting-value">
+              Enabled
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           SECURITY
+      ====================================== -->
+
+      <div class="card settings-full">
+
+        <div class="card-header">
+
+          <div class="card-title">
+            Security & Architecture
+          </div>
+
+        </div>
+
+
+        <div class="security-box">
+
+          <strong>Protected architecture</strong><br>
+
+          The browser uses the Supabase Publishable Key.
+          Administrative access is controlled through
+          Supabase Authentication and the <strong>admins</strong>
+          table.
+
+          <br><br>
+
+          Service-role credentials and the Resend API key
+          are not stored in this website. They remain inside
+          secured Supabase Edge Function Secrets.
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================
+           SYSTEM HEALTH
+      ====================================== -->
+
+      <div class="card settings-full">
+
+        <div class="card-actions">
+
+          <div>
+
+            <div class="card-title">
+              System Health
+            </div>
+
+            <div
+              class="form-help"
+              style="margin-top:5px;"
+            >
+              Check the connection to the main system tables.
+            </div>
+
+          </div>
+
+
+          <button
+            class="refresh-btn"
+            onclick="runHealthCheck()"
+          >
+            Refresh Status
+          </button>
+
+        </div>
+
+
+        <div
+          class="health-grid"
+          style="margin-top:20px;"
+        >
+
+          <div class="health-item">
+
+            <div class="health-name">
+              Supabase
+            </div>
+
+            <div
+              id="healthSupabase"
+              class="health-status"
+            >
+              Checking...
+            </div>
+
+          </div>
+
+
+          <div class="health-item">
+
+            <div class="health-name">
+              Events
+            </div>
+
+            <div
+              id="healthEvents"
+              class="health-status"
+            >
+              Checking...
+            </div>
+
+          </div>
+
+
+          <div class="health-item">
+
+            <div class="health-name">
+              Participants
+            </div>
+
+            <div
+              id="healthParticipants"
+              class="health-status"
+            >
+              Checking...
+            </div>
+
+          </div>
+
+
+          <div class="health-item">
+
+            <div class="health-name">
+              Tickets
+            </div>
+
+            <div
+              id="healthTickets"
+              class="health-status"
+            >
+              Checking...
+            </div>
+
+          </div>
+
+
+          <div class="health-item">
+
+            <div class="health-name">
+              Attendance
+            </div>
+
+            <div
+              id="healthAttendance"
+              class="health-status"
+            >
+              Checking...
+            </div>
+
+          </div>
+
+
+          <div class="health-item">
+
+            <div class="health-name">
+              Admin Access
+            </div>
+
+            <div
+              id="healthAdmin"
+              class="health-status"
+            >
+              Checking...
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+<script>
+
+  /* =========================================
+     SUPABASE
+  ========================================== */
+
+  const SUPABASE_URL =
+    'https://xdaxxgsvorvfpnxteikv.supabase.co';
+
+  const SUPABASE_PUBLISHABLE_KEY =
+    'sb_publishable_wRysyx1ek-J7XrFOLxXfnA_Fp_0UsFO';
+
+
+  const supabaseClient =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+  let currentUser = null;
+
+  let currentAdmin = null;
+
+
+  /* =========================================
+     INITIALIZE
+  ========================================== */
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    async () => {
+
+      try {
+
+        await checkAuthentication();
+
+        await loadCurrentEvent();
+
+        await runHealthCheck();
+
+      } catch (error) {
+
+        console.error(error);
+
+        window.location.href =
+          'admin.html';
+
+      }
+
+    }
+  );
+
+
+  /* =========================================
+     AUTHENTICATION
+  ========================================== */
+
+  async function checkAuthentication() {
+
+    const {
+      data: {
+        session
+      }
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (!session) {
+
+      window.location.href =
+        'admin.html';
+
+      throw new Error(
+        'Authentication required.'
+      );
+
+    }
+
+
+    currentUser =
+      session.user;
+
+
+    const {
+      data: admin,
+      error
+    } =
+      await supabaseClient
+        .from('admins')
+        .select(
+          'id, email, role'
+        )
+        .eq(
+          'id',
+          currentUser.id
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+      throw error;
+
+    }
+
+
+    if (
+      !admin ||
+      !['ADMIN', 'STAFF'].includes(
+        admin.role
+      )
+    ) {
+
+      await supabaseClient.auth.signOut();
+
+      window.location.href =
+        'admin.html';
+
+      throw new Error(
+        'Unauthorized.'
+      );
+
+    }
+
+
+    currentAdmin =
+      admin;
+
+
+    const email =
+      admin.email ||
+      currentUser.email ||
+      '';
+
+
+    const role =
+      admin.role ||
+      'ADMIN';
+
+
+    document.getElementById(
+      'userEmail'
+    ).textContent =
+      email;
+
+
+    document.getElementById(
+      'userName'
+    ).textContent =
+      role === 'ADMIN'
+        ? 'Administrator'
+        : 'Staff';
+
+
+    document.getElementById(
+      'userAvatar'
+    ).textContent =
+      role === 'ADMIN'
+        ? 'A'
+        : 'S';
+
+
+    document.getElementById(
+      'largeAvatar'
+    ).textContent =
+      role === 'ADMIN'
+        ? 'A'
+        : 'S';
+
+
+    document.getElementById(
+      'accountName'
+    ).textContent =
+      role === 'ADMIN'
+        ? 'Administrator'
+        : 'Staff';
+
+
+    document.getElementById(
+      'accountEmail'
+    ).textContent =
+      email;
+
+
+    document.getElementById(
+      'accountRole'
+    ).textContent =
+      role;
+
+  }
+
+
+  /* =========================================
+     LOAD CURRENT EVENT
+  ========================================== */
+
+  async function loadCurrentEvent() {
+
+    const {
+      data: events,
+      error
+    } =
+      await supabaseClient
+        .from('events')
+        .select(`
+          id,
+          event_name,
+          event_code,
+          event_date,
+          registration_open,
+          scanner_enabled,
+          created_at
+        `)
+        .order(
+          'created_at',
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+
+    if (error) {
+
+      console.error(error);
+
+      document.getElementById(
+        'currentEventName'
+      ).textContent =
+        'Unable to load';
+
+      return;
+
+    }
+
+
+    if (!events || !events.length) {
+
+      document.getElementById(
+        'currentEventName'
+      ).textContent =
+        'No event found';
+
+      return;
+
+    }
+
+
+    const event =
+      events[0];
+
+
+    document.getElementById(
+      'currentEventName'
+    ).textContent =
+      event.event_name ||
+      '—';
+
+
+    document.getElementById(
+      'currentEventCode'
+    ).textContent =
+      event.event_code ||
+      '—';
+
+
+    document.getElementById(
+      'currentEventDate'
+    ).textContent =
+      formatDate(event.event_date);
+
+
+    document.getElementById(
+      'currentRegistration'
+    ).innerHTML =
+      event.registration_open
+        ? `<span class="status-badge enabled">
+             <span class="status-dot"></span>
+             OPEN
+           </span>`
+        : `<span class="status-badge warning">
+             CLOSED
+           </span>`;
+
+
+    document.getElementById(
+      'currentScanner'
+    ).innerHTML =
+      event.scanner_enabled
+        ? `<span class="status-badge enabled">
+             <span class="status-dot"></span>
+             ENABLED
+           </span>`
+        : `<span class="status-badge warning">
+             DISABLED
+           </span>`;
+
+  }
+
+
+  /* =========================================
+     SYSTEM HEALTH
+  ========================================== */
+
+  async function runHealthCheck() {
+
+    setHealth(
+      'healthSupabase',
+      'Checking...',
+      false
+    );
+
+    setHealth(
+      'healthEvents',
+      'Checking...',
+      false
+    );
+
+    setHealth(
+      'healthParticipants',
+      'Checking...',
+      false
+    );
+
+    setHealth(
+      'healthTickets',
+      'Checking...',
+      false
+    );
+
+    setHealth(
+      'healthAttendance',
+      'Checking...',
+      false
+    );
+
+    setHealth(
+      'healthAdmin',
+      'Checking...',
+      false
+    );
+
+
+    /*
+     * Supabase / authentication
+     */
+
+    const {
+      data: sessionData,
+      error: sessionError
+    } =
+      await supabaseClient.auth.getSession();
+
+
+    if (sessionError || !sessionData.session) {
+
+      setHealth(
+        'healthSupabase',
+        'Connection failed',
+        false,
+        true
+      );
+
+      setHealth(
+        'healthAdmin',
+        'Not authenticated',
+        false,
+        true
+      );
+
+      return;
+
+    }
+
+
+    setHealth(
+      'healthSupabase',
+      'Connected',
+      true
+    );
+
+
+    /*
+     * Admin
+     */
+
+    const {
+      data: admin,
+      error: adminError
+    } =
+      await supabaseClient
+        .from('admins')
+        .select('id')
+        .eq(
+          'id',
+          sessionData.session.user.id
+        )
+        .maybeSingle();
+
+
+    if (
+      adminError ||
+      !admin
+    ) {
+
+      setHealth(
+        'healthAdmin',
+        'Access error',
+        false,
+        true
+      );
+
+    } else {
+
+      setHealth(
+        'healthAdmin',
+        'Authenticated',
+        true
+      );
+
+    }
+
+
+    /*
+     * Events
+     */
+
+    await checkTable(
+      'events',
+      'healthEvents'
+    );
+
+
+    /*
+     * Participants
+     */
+
+    await checkTable(
+      'participants',
+      'healthParticipants'
+    );
+
+
+    /*
+     * Tickets
+     */
+
+    await checkTable(
+      'tickets',
+      'healthTickets'
+    );
+
+
+    /*
+     * Attendance
+     */
+
+    await checkTable(
+      'attendance',
+      'healthAttendance'
+    );
+
+  }
+
+
+  async function checkTable(
+    table,
+    elementId
+  ) {
+
+    const {
+      error
+    } =
+      await supabaseClient
+        .from(table)
+        .select('*', {
+          count: 'exact',
+          head: true
+        });
+
+
+    if (error) {
+
+      console.error(
+        table,
+        error
+      );
+
+
+      setHealth(
+        elementId,
+        'Connection error',
+        false,
+        true
+      );
+
+      return;
+
+    }
+
+
+    setHealth(
+      elementId,
+      'Connected',
+      true
+    );
+
+  }
+
+
+  function setHealth(
+    elementId,
+    text,
+    ok,
+    error = false
+  ) {
+
+    const element =
+      document.getElementById(
+        elementId
+      );
+
+
+    element.textContent =
+      text;
+
+
+    element.className =
+      'health-status';
+
+
+    if (ok) {
+
+      element.classList.add(
+        'ok'
+      );
+
+    }
+
+
+    if (error) {
+
+      element.classList.add(
+        'error'
+      );
+
+    }
+
+  }
+
+
+  /* =========================================
+     DATE FORMAT
+  ========================================== */
+
+  function formatDate(
+    value
+  ) {
+
+    if (!value) {
+
+      return '—';
+
+    }
+
+
+    return new Date(
+      value + 'T00:00:00'
+    ).toLocaleDateString(
+      'en-GB',
+      {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }
+    );
+
+  }
+
+
+  /* =========================================
+     LOGOUT
+  ========================================== */
+
+  async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    window.location.href =
+      'admin.html';
+
+  }
+
+</script>
+
+</body>
+</html>
