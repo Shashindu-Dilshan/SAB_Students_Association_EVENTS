@@ -423,8 +423,27 @@ async function initializeDashboard() {
 
 
     // -----------------------------------------------------
-    // Display admin
+    // Display admin in the sidebar and page header
     // -----------------------------------------------------
+
+    document
+      .getElementById("userName")
+      .textContent =
+        admin.role === "ADMIN"
+          ? "Administrator"
+          : "Staff";
+
+    document
+      .getElementById("userEmail")
+      .textContent =
+        admin.email || user.email || "Admin";
+
+    document
+      .getElementById("userAvatar")
+      .textContent =
+        admin.role === "ADMIN"
+          ? "A"
+          : "S";
 
     document
       .getElementById("adminUser")
