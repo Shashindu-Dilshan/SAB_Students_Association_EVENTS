@@ -31,72 +31,27 @@
      SIDEBAR
 ===================================================== -->
 
-<aside class="sidebar">
-
-    <div class="logo-area">
-
-        <img
-            src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
-            alt="SABSA Logo"
-        >
-
-        <h2>SABSA E-Ticket</h2>
-
-        <p>Administration Panel</p>
-
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png" alt="SABSA Logo">
+      <div><div class="brand-title">SABSA</div><div class="brand-subtitle">E-Ticket System</div></div>
     </div>
-
-
-    <nav class="nav-menu">
-
-        <a
-            href="admin-dashboard.html"
-            class="active"
-        >
-            Dashboard
-        </a>
-
-        <a
-            href="participants.html"
-        >
-            Participants
-        </a>
-
-        <a
-            href="tickets.html"
-        >
-            Tickets
-        </a>
-
-        <a
-            href="event.html"
-        >
-            Event
-        </a>
-
-        <a
-            href="scanner.html"
-        >
-            Scanner
-        </a>
-
-        <a
-            href="settings.html"
-        >
-            Settings
-        </a>
-
+    <nav class="sidebar-nav">
+      <a href="admin-dashboard.html" class="nav-item active"><span class="nav-icon">▦</span><span>Dashboard</span></a>
+      <a href="participants.html" class="nav-item"><span class="nav-icon">♙</span><span>Participants</span></a>
+      <a href="tickets.html" class="nav-item"><span class="nav-icon">▤</span><span>Tickets</span></a>
+      <a href="event.html" class="nav-item"><span class="nav-icon">◫</span><span>Event</span></a>
+      <a href="scanner.html" class="nav-item"><span class="nav-icon">▣</span><span>Scanner</span></a>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span><span>Settings</span></a>
     </nav>
-
-
-    <button
-        class="logout-btn"
-        onclick="logout()"
-    >
-        Logout
-    </button>
-
-</aside>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="userAvatar">A</div>
+        <div class="sidebar-user-info"><div id="userName">Admin</div><div id="userEmail">Loading...</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </aside>
 
 
 
