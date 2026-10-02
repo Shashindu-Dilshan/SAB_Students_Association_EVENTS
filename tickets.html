@@ -349,6 +349,29 @@
                 padding: 10px;
             }
         }
+    
+/* Shared admin sidebar: keep navigation consistent across admin pages. */
+.sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 260px; background: #111827; color: #ffffff; display: flex; flex-direction: column; z-index: 1000; overflow-y: auto; padding: 0; }
+.sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 22px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.sidebar-brand img { width: 42px !important; height: 42px !important; object-fit: contain; flex-shrink: 0; background: transparent; border-radius: 0; padding: 0; margin: 0; }
+.brand-title { font-size: 16px; font-weight: 700; color: #ffffff; line-height: 1.2; }
+.brand-subtitle { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+.sidebar-nav { display: flex; flex-direction: column; padding: 16px 12px; gap: 4px; }
+.sidebar-nav .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 13px; border-radius: 8px; color: #d1d5db !important; text-decoration: none !important; font-size: 14px; transition: background 0.2s, color 0.2s; }
+.sidebar-nav .nav-item:hover { background: rgba(255,255,255,0.08); color: #ffffff !important; }
+.sidebar-nav .nav-item.active { background: #2563eb; color: #ffffff !important; font-weight: 400; }
+.nav-icon { width: 20px; text-align: center; font-size: 16px; flex-shrink: 0; }
+.sidebar-bottom { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+.sidebar-user { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sidebar-user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #2563eb; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+.sidebar-user-info { min-width: 0; overflow: hidden; }
+.sidebar-user-info > div:first-child { color: #ffffff; font-size: 13px; font-weight: 600; }
+.sidebar-user-info > div:last-child { color: #9ca3af; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.logout-btn { width: 100%; margin: 0; padding: 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: transparent; color: #ffffff; cursor: pointer; font-size: 13px; }
+.logout-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+@media (max-width: 900px) { .sidebar { width: 220px; } }
+@media (max-width: 700px) { .sidebar { position: relative; width: 100%; min-height: auto; height: auto; bottom: auto; } }
+
     </style>
 </head>
 
@@ -358,57 +381,27 @@
          SIDEBAR
     ===================================================== -->
 
-    <aside class="sidebar">
-
-        <div class="logo-area">
-
-            <img
-                src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png"
-                alt="SABSA Logo"
-            >
-
-            <h2>SABSA E-Ticket</h2>
-
-            <p>Administration Panel</p>
-
-        </div>
-
-        <nav class="nav-menu">
-
-            <a href="admin-dashboard.html">
-                Dashboard
-            </a>
-
-            <a href="participants.html">
-                Participants
-            </a>
-
-            <a href="tickets.html" class="active">
-                Tickets
-            </a>
-
-            <a href="event.html">
-                Event
-            </a>
-
-            <a href="scanner.html">
-                Scanner
-            </a>
-
-            <a href="settings.html">
-                Settings
-            </a>
-
-        </nav>
-
-        <button
-            class="logout-btn"
-            onclick="logout()"
-        >
-            Logout
-        </button>
-
-    </aside>
+      <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png" alt="SABSA Logo">
+      <div><div class="brand-title">SABSA</div><div class="brand-subtitle">E-Ticket System</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="admin-dashboard.html" class="nav-item"><span class="nav-icon">▦</span><span>Dashboard</span></a>
+      <a href="participants.html" class="nav-item"><span class="nav-icon">♙</span><span>Participants</span></a>
+      <a href="tickets.html" class="nav-item active"><span class="nav-icon">▤</span><span>Tickets</span></a>
+      <a href="event.html" class="nav-item"><span class="nav-icon">◫</span><span>Event</span></a>
+      <a href="scanner.html" class="nav-item"><span class="nav-icon">▣</span><span>Scanner</span></a>
+      <a href="settings.html" class="nav-item"><span class="nav-icon">⚙</span><span>Settings</span></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="userAvatar">A</div>
+        <div class="sidebar-user-info"><div id="userName">Admin</div><div id="userEmail">Loading...</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </aside>
 
 
     <!-- =====================================================
