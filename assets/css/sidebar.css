@@ -155,3 +155,12 @@
   }
   .main-content, .main { margin-left: 0; }
 }
+
+/* Keep the Participants page's legacy absolutely positioned button in normal flow. */
+.sidebar .sidebar-bottom > .logout-btn {
+  position: static;
+  inset: auto;
+  display: block;
+  width: 100%;
+  margin: 0;
+}
