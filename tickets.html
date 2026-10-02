@@ -952,6 +952,15 @@
 
                 currentAdmin =
                     admin;
+    document.getElementById('userEmail').textContent =
+      admin.email || currentUser.email || 'Admin';
+
+    document.getElementById('userName').textContent =
+      admin.role === 'ADMIN' ? 'Administrator' : 'Staff';
+
+    document.getElementById('userAvatar').textContent =
+      admin.role === 'ADMIN' ? 'A' : 'S';
+
 
 
                 await loadEvents();
