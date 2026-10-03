@@ -16,6 +16,22 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <link rel="stylesheet" href="assets/css/sidebar.css">
+  <style>
+    .stats { grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); }
+    .dashboard-filters { display:flex; justify-content:flex-end; align-items:end; gap:12px; margin:0 0 20px; }
+    .dashboard-filter { min-width:280px; }
+    .dashboard-filter label, .summary-filter label { display:block; margin:0 0 6px; color:#6b7280; font-size:12px; font-weight:600; }
+    .dashboard-filter select, .summary-filter select { padding:10px 12px; }
+    .summary-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .summary-toolbar .card-title { margin-bottom:0; }
+    .summary-filter { min-width:170px; }
+    .summary-metric { padding:15px; background:#f9fafb; border-radius:9px; margin-bottom:10px; color:#6b7280; text-align:center; }
+    .summary-metric strong { color:#111827; }
+    .meal-counts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .meal-count { padding:14px; border-radius:9px; background:#f9fafb; text-align:center; color:#6b7280; }
+    .meal-count strong { display:block; color:#111827; font-size:24px; margin-bottom:4px; }
+    @media(max-width:700px) { .dashboard-filters { justify-content:stretch; } .dashboard-filter { min-width:0; width:100%; } .summary-toolbar { align-items:stretch; flex-direction:column; } .summary-filter { min-width:0; } }
+  </style>
 </head>
 
 
@@ -81,6 +97,15 @@
 
   </div>
 
+
+  <div class="dashboard-filters">
+    <div class="dashboard-filter">
+      <label for="eventFilter">Dashboard event</label>
+      <select id="eventFilter" aria-label="Filter the dashboard by event" onchange="handleEventChange()">
+        <option value="">Loading events...</option>
+      </select>
+    </div>
+  </div>
 
   <div
     id="errorBox"
@@ -179,6 +204,18 @@
     </div>
 
 
+    <div class="stat-card">
+      <div class="stat-label">Veg Meal Preference</div>
+      <div class="stat-value" id="vegCount">-</div>
+      <div class="stat-description">Registered participants</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Non-Veg Meal Preference</div>
+      <div class="stat-value" id="nonVegCount">-</div>
+      <div class="stat-description">Registered participants</div>
+    </div>
+
   </div>
 
 
@@ -220,9 +257,15 @@
 
       <div class="card-header">
 
-        <h2 class="card-title">
-          Ticket Summary
-        </h2>
+        <div class="summary-toolbar">
+          <h2 class="card-title">Ticket Summary</h2>
+          <div class="summary-filter">
+            <label for="batchFilter">Batch</label>
+            <select id="batchFilter" aria-label="Filter ticket summary by batch" onchange="handleBatchChange()" disabled>
+              <option value="*">All batches</option>
+            </select>
+          </div>
+        </div>
 
       </div>
 
@@ -470,475 +513,188 @@ async function initializeDashboard() {
 // LOAD DASHBOARD
 // =========================================================
 
-async function loadDashboard() {
+let selectedEventId = null;
+let dashboardParticipants = [];
 
-  // -------------------------------------------------------
-  // Participants
-  // -------------------------------------------------------
-
-  const {
-    data: participants,
-    error: participantError
-  } =
-    await supabaseClient
-      .from("participants")
-      .select(`
-        id,
-        full_name,
-        registration_no,
-        batch,
-        created_at,
-        tickets (
-          ticket_id,
-          ticket_status,
-          email_status
-        )
-      `)
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      );
-
-
-  if (participantError) {
-    throw participantError;
+async function handleEventChange() {
+  selectedEventId = document.getElementById("eventFilter").value;
+  document.getElementById("batchFilter").value = "*";
+  try {
+    await loadDashboard();
+  } catch (error) {
+    console.error(error);
+    showError(error.message || "Unable to load dashboard.");
   }
+}
 
+function handleBatchChange() {
+  renderTicketSummary();
+}
 
-  const totalParticipants =
-    participants.length;
+function classifyMeal(meal) {
+  const value = String(meal || "").trim().toLowerCase().replace(/[\s_-]/g, "");
+  if (value === "veg" || value === "vegetarian") return "veg";
+  if (value === "nonveg" || value === "nonvegetarian") return "nonveg";
+  return null;
+}
 
+async function loadDashboard() {
+  const { data: events, error: eventError } = await supabaseClient
+    .from("events")
+    .select("id, event_name, event_code, event_date, event_time, venue, registration_open, scanner_enabled, created_at")
+    .order("created_at", { ascending: false });
 
-  // -------------------------------------------------------
-  // Tickets
-  // -------------------------------------------------------
+  if (eventError) throw eventError;
 
+  const eventFilter = document.getElementById("eventFilter");
+  const eventRows = events || [];
+  const previousEventId = selectedEventId ?? eventFilter.value;
+  eventFilter.innerHTML = '<option value="*">All events</option>' +
+    eventRows.map(event =>
+      '<option value="' + escapeHtml(event.id) + '">' +
+      escapeHtml(event.event_name) + ' (' + escapeHtml(event.event_code) + ')' +
+      '</option>'
+    ).join("");
+
+  if (previousEventId && (previousEventId === "*" || eventRows.some(event => event.id === previousEventId))) {
+    selectedEventId = previousEventId;
+  } else {
+    selectedEventId = eventRows[0]?.id || "*";
+  }
+  eventFilter.value = selectedEventId;
+
+  const selectedEvent = eventRows.find(event => event.id === selectedEventId) || null;
+  const query = supabaseClient
+    .from("participants")
+    .select(`
+      id,
+      full_name,
+      email,
+      registration_no,
+      batch,
+      meal,
+      created_at,
+      tickets (
+        ticket_id,
+        ticket_status,
+        email_status
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (selectedEventId !== "*") query.eq("event_id", selectedEventId);
+
+  const { data: participants, error: participantError } = await query;
+  if (participantError) throw participantError;
+
+  dashboardParticipants = participants || [];
+  const totalParticipants = dashboardParticipants.length;
   let ticketsSent = 0;
-
   let ticketsPending = 0;
-
   let ticketsFailed = 0;
-
   let activeTickets = 0;
-
   let usedTickets = 0;
 
+  dashboardParticipants.forEach(participant => {
+    const ticket = participant.tickets?.[0];
+    if (!ticket) return;
+    if (ticket.email_status === "SENT") ticketsSent++;
+    if (ticket.email_status === "PENDING") ticketsPending++;
+    if (ticket.email_status === "FAILED") ticketsFailed++;
+    if (ticket.ticket_status === "ACTIVE") activeTickets++;
+    if (ticket.ticket_status === "USED") usedTickets++;
+  });
 
-  participants.forEach(
-    participant => {
-
-      const ticket =
-        participant.tickets?.[0];
-
-
-      if (!ticket) {
-        return;
-      }
-
-
-      if (
-        ticket.email_status ===
-        "SENT"
-      ) {
-
-        ticketsSent++;
-
-      }
-
-
-      if (
-        ticket.email_status ===
-        "PENDING"
-      ) {
-
-        ticketsPending++;
-
-      }
-
-
-      if (
-        ticket.email_status ===
-        "FAILED"
-      ) {
-
-        ticketsFailed++;
-
-      }
-
-
-      if (
-        ticket.ticket_status ===
-        "ACTIVE"
-      ) {
-
-        activeTickets++;
-
-      }
-
-
-      if (
-        ticket.ticket_status ===
-        "USED"
-      ) {
-
-        usedTickets++;
-
-      }
-
-    }
-  );
-
-
-  // -------------------------------------------------------
-  // Attendance
-  // -------------------------------------------------------
-
-  const {
-    count: attendanceCount,
-    error: attendanceError
-  } =
-    await supabaseClient
-      .from("attendance")
-      .select(
-        "id",
-        {
-          count: "exact",
-          head: true
-        }
-      );
-
-
-  if (attendanceError) {
-    throw attendanceError;
+  let attendanceQuery = supabaseClient.from("attendance").select("id", { count: "exact", head: true });
+  if (selectedEventId !== "*") {
+    attendanceQuery = supabaseClient.from("attendance")
+      .select("id, tickets!inner(participant_id, participants!inner(event_id))", { count: "exact", head: true })
+      .eq("tickets.participants.event_id", selectedEventId);
   }
+  const { count: attendanceCount, error: attendanceError } = await attendanceQuery;
+  if (attendanceError) throw attendanceError;
 
+  const vegCount = dashboardParticipants.filter(participant => classifyMeal(participant.meal) === "veg").length;
+  const nonVegCount = dashboardParticipants.filter(participant => classifyMeal(participant.meal) === "nonveg").length;
+  document.getElementById("totalParticipants").textContent = totalParticipants;
+  document.getElementById("ticketsSent").textContent = ticketsSent;
+  document.getElementById("ticketsPending").textContent = ticketsPending;
+  document.getElementById("attendanceCount").textContent = attendanceCount || 0;
+  document.getElementById("vegCount").textContent = vegCount;
+  document.getElementById("nonVegCount").textContent = nonVegCount;
 
-  // -------------------------------------------------------
-  // Display statistics
-  // -------------------------------------------------------
+  const batchFilter = document.getElementById("batchFilter");
+  const previousBatch = batchFilter.value || "*";
+  const batches = [...new Set(dashboardParticipants.map(participant => participant.batch).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+  batchFilter.innerHTML = '<option value="*">All batches</option>' + batches.map(batch =>
+    '<option value="' + escapeHtml(batch) + '">' + escapeHtml(batch) + '</option>'
+  ).join("");
+  batchFilter.value = batches.includes(previousBatch) ? previousBatch : "*";
+  batchFilter.disabled = batches.length === 0;
 
-  document
-    .getElementById(
-      "totalParticipants"
-    )
-    .textContent =
-      totalParticipants;
+  renderTicketSummary();
+  renderRecentParticipants(dashboardParticipants.slice(0, 10));
+  renderEvent(selectedEvent);
+}
 
+function renderTicketSummary() {
+  const batch = document.getElementById("batchFilter").value || "*";
+  const participants = batch === "*" ? dashboardParticipants :
+    dashboardParticipants.filter(participant => participant.batch === batch);
+  const activeTickets = participants.reduce((count, participant) =>
+    count + (participant.tickets?.[0]?.ticket_status === "ACTIVE" ? 1 : 0), 0);
+  const usedTickets = participants.reduce((count, participant) =>
+    count + (participant.tickets?.[0]?.ticket_status === "USED" ? 1 : 0), 0);
+  const failedForBatch = participants.reduce((count, participant) =>
+    count + (participant.tickets?.[0]?.email_status === "FAILED" ? 1 : 0), 0);
+  const vegCount = participants.filter(participant => classifyMeal(participant.meal) === "veg").length;
+  const nonVegCount = participants.filter(participant => classifyMeal(participant.meal) === "nonveg").length;
 
-  document
-    .getElementById(
-      "ticketsSent"
-    )
-    .textContent =
-      ticketsSent;
-
-
-  document
-    .getElementById(
-      "ticketsPending"
-    )
-    .textContent =
-      ticketsPending;
-
-
-  document
-    .getElementById(
-      "attendanceCount"
-    )
-    .textContent =
-      attendanceCount || 0;
-
-
-  // -------------------------------------------------------
-  // Ticket summary
-  // -------------------------------------------------------
-
-  document
-    .getElementById(
-      "ticketSummary"
-    )
-    .innerHTML = `
-
-      <div style="
-        padding:15px;
-        background:#f9fafb;
-        border-radius:9px;
-        margin-bottom:10px;
-      ">
-
-        <strong>
-          ${activeTickets}
-        </strong>
-
-        Active Tickets
-
-      </div>
-
-
-      <div style="
-        padding:15px;
-        background:#f9fafb;
-        border-radius:9px;
-        margin-bottom:10px;
-      ">
-
-        <strong>
-          ${usedTickets}
-        </strong>
-
-        Used Tickets
-
-      </div>
-
-
-      <div style="
-        padding:15px;
-        background:#f9fafb;
-        border-radius:9px;
-        margin-bottom:10px;
-      ">
-
-        <strong>
-          ${ticketsFailed}
-        </strong>
-
-        Failed Emails
-
-      </div>
-
-    `;
-
-
-  // -------------------------------------------------------
-  // Recent registrations
-  // -------------------------------------------------------
-
-  renderRecentParticipants(
-    participants.slice(0, 10)
-  );
-
-
-  // -------------------------------------------------------
-  // Event
-  // -------------------------------------------------------
-
-  await loadEvent();
-
+  document.getElementById("ticketSummary").innerHTML = `
+    <div class="summary-metric"><strong>${activeTickets}</strong> Active Tickets</div>
+    <div class="summary-metric"><strong>${usedTickets}</strong> Used Tickets</div>
+    <div class="summary-metric"><strong>${failedForBatch}</strong> Failed Emails</div>
+    <div class="meal-counts">
+      <div class="meal-count"><strong>${vegCount}</strong> Veg</div>
+      <div class="meal-count"><strong>${nonVegCount}</strong> Non-Veg</div>
+    </div>
+  `;
 }
 
 
-// =========================================================
-// LOAD EVENT
-// =========================================================
-
-async function loadEvent() {
-
-  const {
-    data: events,
-    error
-  } =
-    await supabaseClient
-      .from("events")
-      .select(`
-        id,
-        event_name,
-        event_code,
-        event_date,
-        event_time,
-        venue,
-        description,
-        logo_url,
-        registration_open,
-        scanner_enabled
-      `)
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(1);
-
-
-  if (error) {
-    throw error;
-  }
-
-
-  const container =
-    document.getElementById(
-      "eventContainer"
-    );
-
-
-  if (!events || events.length === 0) {
-
-    container.innerHTML = `
-      <div class="loading">
-        No event found.
-      </div>
-    `;
-
+function renderEvent(event) {
+  const container = document.getElementById("eventContainer");
+  if (!event) {
+    container.innerHTML = selectedEventId === "*" ? '<div class="loading">Showing registrations and totals across all events.</div>' : '<div class="loading">No event found.</div>';
     return;
   }
 
-
-  const event =
-    events[0];
-
-
-  let formattedDate =
-    event.event_date || "-";
-
-
+  let formattedDate = event.event_date || "-";
   if (event.event_date) {
-
-    try {
-
-      formattedDate =
-        new Date(
-          event.event_date +
-          "T00:00:00"
-        ).toLocaleDateString(
-          "en-GB",
-          {
-            day: "2-digit",
-            month: "long",
-            year: "numeric"
-          }
-        );
-
-    } catch {
-      formattedDate =
-        event.event_date;
-    }
-
+    formattedDate = new Date(event.event_date + "T00:00:00").toLocaleDateString("en-GB", {
+      day: "2-digit", month: "long", year: "numeric"
+    });
   }
 
-
-  const registrationStatus =
-    event.registration_open
-      ? "OPEN"
-      : "CLOSED";
-
-
-  const scannerStatus =
-    event.scanner_enabled
-      ? "ENABLED"
-      : "DISABLED";
-
-
+  const registrationStatus = event.registration_open ? "OPEN" : "CLOSED";
+  const scannerStatus = event.scanner_enabled ? "ENABLED" : "DISABLED";
   container.innerHTML = `
-
     <div class="event-card">
-
-      <div class="event-name">
-        ${escapeHtml(
-          event.event_name
-        )}
+      <div class="event-name">${escapeHtml(event.event_name)}</div>
+      <div class="event-detail"><strong>Event Code:</strong> ${escapeHtml(event.event_code)}</div>
+      <div class="event-detail"><strong>Date:</strong> ${escapeHtml(formattedDate)}</div>
+      <div class="event-detail"><strong>Time:</strong> ${escapeHtml(event.event_time || "-")}</div>
+      <div class="event-detail"><strong>Venue:</strong> ${escapeHtml(event.venue || "-")}</div>
+      <div style="margin-top:15px;">
+        <span class="status ${event.registration_open ? "active" : "failed"}">Registration: ${registrationStatus}</span>
+        <span class="status ${event.scanner_enabled ? "active" : "failed"}" style="margin-left:6px;">Scanner: ${scannerStatus}</span>
       </div>
-
-
-      <div class="event-detail">
-
-        <strong>
-          Event Code:
-        </strong>
-
-        ${escapeHtml(
-          event.event_code
-        )}
-
-      </div>
-
-
-      <div class="event-detail">
-
-        <strong>
-          Date:
-        </strong>
-
-        ${escapeHtml(
-          formattedDate
-        )}
-
-      </div>
-
-
-      <div class="event-detail">
-
-        <strong>
-          Time:
-        </strong>
-
-        ${escapeHtml(
-          event.event_time ||
-          "-"
-        )}
-
-      </div>
-
-
-      <div class="event-detail">
-
-        <strong>
-          Venue:
-        </strong>
-
-        ${escapeHtml(
-          event.venue ||
-          "-"
-        )}
-
-      </div>
-
-
-      <div style="
-        margin-top:15px;
-      ">
-
-        <span
-          class="status ${
-            event.registration_open
-              ? "active"
-              : "failed"
-          }"
-        >
-
-          Registration:
-          ${registrationStatus}
-
-        </span>
-
-
-        <span
-          class="status ${
-            event.scanner_enabled
-              ? "active"
-              : "failed"
-          }"
-          style="
-            margin-left:6px;
-          "
-        >
-
-          Scanner:
-          ${scannerStatus}
-
-        </span>
-
-      </div>
-
     </div>
-
   `;
-
 }
 
 
-// =========================================================
 // RECENT PARTICIPANTS
 // =========================================================
 
