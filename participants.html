@@ -590,6 +590,107 @@
       cursor: not-allowed;
     }
 
+    .participant-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-width: 190px;
+    }
+
+    .edit-btn {
+      background: #0f766e;
+    }
+
+    .edit-btn:hover {
+      background: #115e59;
+    }
+
+    .delete-btn {
+      background: #dc2626;
+    }
+
+    .delete-btn:hover {
+      background: #b91c1c;
+    }
+
+    .edit-card {
+      display: none;
+      margin-top: 20px;
+      padding: 22px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .edit-card.is-open {
+      display: block;
+    }
+
+    .edit-card h2 {
+      margin-bottom: 6px;
+      font-size: 18px;
+      color: #111827;
+    }
+
+    .edit-description {
+      margin-bottom: 18px;
+      color: #6b7280;
+      font-size: 13px;
+    }
+
+    .edit-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .edit-field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .edit-field input[readonly] {
+      background: #f3f4f6;
+      color: #6b7280;
+      cursor: not-allowed;
+    }
+
+    .edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .cancel-edit-btn {
+      background: #4b5563;
+    }
+
+    .save-edit-btn {
+      background: #2563eb;
+    }
+
+    .edit-actions button:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    @media (max-width: 550px) {
+      .edit-grid {
+        grid-template-columns: 1fr;
+      }
+      .edit-actions {
+        flex-direction: column-reverse;
+      }
+      .edit-actions button {
+        width: 100%;
+      }
+    }
+
     /* =========================
        LOADING
     ========================= */
@@ -1342,6 +1443,43 @@
   </div>
 
 
+  <section id="editParticipantCard" class="edit-card" aria-labelledby="editParticipantTitle" aria-hidden="true">
+    <h2 id="editParticipantTitle">Edit Participant Details</h2>
+    <p class="edit-description">Update the registration details below. The ticket ID is locked and cannot be changed.</p>
+    <form id="participantEditForm" onsubmit="saveParticipantEdit(event)">
+      <input type="hidden" id="editParticipantId">
+      <div class="edit-grid">
+        <div class="edit-field">
+          <label for="editFullName">Name</label>
+          <input id="editFullName" name="full_name" type="text" maxlength="200" required>
+        </div>
+        <div class="edit-field">
+          <label for="editEmail">Email</label>
+          <input id="editEmail" name="email" type="email" maxlength="320" required>
+        </div>
+        <div class="edit-field">
+          <label for="editBatch">Batch</label>
+          <input id="editBatch" name="batch" type="text" maxlength="100">
+        </div>
+        <div class="edit-field">
+          <label for="editRegistrationNo">Registration Number</label>
+          <input id="editRegistrationNo" name="registration_no" type="text" maxlength="100" required>
+        </div>
+        <div class="edit-field">
+          <label for="editMeal">Meal Preference</label>
+          <input id="editMeal" name="meal" type="text" maxlength="50">
+        </div>
+        <div class="edit-field">
+          <label for="editTicketId">Ticket ID (locked)</label>
+          <input id="editTicketId" type="text" readonly aria-readonly="true">
+        </div>
+      </div>
+      <div class="edit-actions">
+        <button type="button" class="action-btn cancel-edit-btn" onclick="closeParticipantEditor()">Cancel</button>
+        <button type="submit" id="saveParticipantBtn" class="action-btn save-edit-btn">Save Changes</button>
+      </div>
+    </form>
+  </section>
 </main>
 
 
@@ -3070,58 +3208,158 @@ function getStatusBadge(
 function getActionButton(
   participant
 ) {
+  const ticket = participant.ticket;
+  const status = ticket?.email_status;
+  let emailAction = '<span class="action-btn" style="background:#9ca3af;cursor:default">No Ticket</span>';
 
-  if (
-    !participant.ticket
-  ) {
-
-    return `
-      <button
-        class="action-btn"
-        disabled
-      >
-        No Ticket
-      </button>
+  if (ticket && status === 'SENT') {
+    emailAction = `
+      <button type="button" class="action-btn resend-btn"
+        onclick="sendTicket('${escapeJs(ticket.ticket_id)}', true)">Resend</button>
     `;
-
-  }
-
-
-  const status =
-    participant.ticket.email_status;
-
-
-  if (
-    status === 'SENT'
-  ) {
-
-    return `
-      <button
-        class="action-btn resend-btn"
-        onclick="sendTicket(
-          '${escapeJs(participant.ticket.ticket_id)}',
-          true
-        )"
-      >
-        Resend
-      </button>
+  } else if (ticket) {
+    emailAction = `
+      <button type="button" class="action-btn send-btn"
+        onclick="sendTicket('${escapeJs(ticket.ticket_id)}', false)">Send Ticket</button>
     `;
-
   }
-
 
   return `
-    <button
-      class="action-btn send-btn"
-      onclick="sendTicket(
-        '${escapeJs(participant.ticket.ticket_id)}',
-        false
-      )"
-    >
-      Send Ticket
-    </button>
+    <div class="participant-actions">
+      ${emailAction}
+      <button type="button" class="action-btn edit-btn"
+        onclick="openParticipantEditor('${escapeJs(participant.id)}')">Edit</button>
+      <button type="button" class="action-btn delete-btn"
+        onclick="deleteParticipant('${escapeJs(participant.id)}')">Delete</button>
+    </div>
   `;
+}
 
+
+/* =========================================================
+   EDIT PARTICIPANT
+========================================================= */
+
+function openParticipantEditor(participantId) {
+  const participant = participants.find(item => item.id === participantId);
+  if (!participant) {
+    showToast('That participant is no longer in the current list. Reloading...', 'error');
+    return;
+  }
+
+  document.getElementById('editParticipantId').value = participant.id;
+  document.getElementById('editFullName').value = participant.full_name || '';
+  document.getElementById('editEmail').value = participant.email || '';
+  document.getElementById('editBatch').value = participant.batch || '';
+  document.getElementById('editRegistrationNo').value = participant.registration_no || '';
+  document.getElementById('editMeal').value = participant.meal || '';
+  document.getElementById('editTicketId').value = participant.ticket?.ticket_id || 'No ticket';
+
+  const panel = document.getElementById('editParticipantCard');
+  panel.classList.add('is-open');
+  panel.setAttribute('aria-hidden', 'false');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('editFullName').focus();
+}
+
+function closeParticipantEditor() {
+  const panel = document.getElementById('editParticipantCard');
+  panel.classList.remove('is-open');
+  panel.setAttribute('aria-hidden', 'true');
+  document.getElementById('participantEditForm').reset();
+  document.getElementById('editParticipantId').value = '';
+}
+
+async function saveParticipantEdit(event) {
+  event.preventDefault();
+
+  const participantId = document.getElementById('editParticipantId').value;
+  const participant = participants.find(item => item.id === participantId);
+  const eventId = document.getElementById('eventSelect').value;
+  if (!participant || !eventId || participant.event_id !== eventId) {
+    showToast('The participant or selected event changed. Reload the list and try again.', 'error');
+    return;
+  }
+
+  const saveButton = document.getElementById('saveParticipantBtn');
+  const updates = {
+    full_name: document.getElementById('editFullName').value.trim(),
+    email: document.getElementById('editEmail').value.trim(),
+    batch: document.getElementById('editBatch').value.trim() || null,
+    registration_no: document.getElementById('editRegistrationNo').value.trim(),
+    meal: document.getElementById('editMeal').value.trim() || null
+  };
+
+  saveButton.disabled = true;
+  saveButton.textContent = 'Saving...';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('participants')
+      .update(updates)
+      .eq('id', participantId)
+      .eq('event_id', eventId)
+      .select('id')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error('No participant was updated. Check your access and try again.');
+
+    closeParticipantEditor();
+    await loadParticipants(eventId);
+    showToast('Participant details updated.', 'success');
+  }
+  catch (error) {
+    console.error(error);
+    showToast(error.message || 'Unable to update participant.', 'error');
+  }
+  finally {
+    saveButton.disabled = false;
+    saveButton.textContent = 'Save Changes';
+  }
+}
+
+
+/* =========================================================
+   DELETE PARTICIPANT
+========================================================= */
+
+async function deleteParticipant(participantId) {
+  const participant = participants.find(item => item.id === participantId);
+  const eventId = document.getElementById('eventSelect').value;
+  if (!participant || !eventId || participant.event_id !== eventId) {
+    showToast('The participant or selected event changed. Reload the list and try again.', 'error');
+    return;
+  }
+
+  const confirmed = confirm(
+    `Delete the registration for ${participant.full_name || participant.registration_no}?\n\n` +
+    'This permanently removes the participant and linked ticket and attendance records.'
+  );
+  if (!confirmed) return;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('participants')
+      .delete()
+      .eq('id', participantId)
+      .eq('event_id', eventId)
+      .select('id')
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw new Error('No participant was deleted. Check your access and try again.');
+
+    if (document.getElementById('editParticipantId').value === participantId) {
+      closeParticipantEditor();
+    }
+    await loadParticipants(eventId);
+    showToast('Registration deleted.', 'success');
+  }
+  catch (error) {
+    console.error(error);
+    showToast(error.message || 'Unable to delete participant.', 'error');
+  }
 }
 
 
