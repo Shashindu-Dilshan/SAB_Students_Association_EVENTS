@@ -161,6 +161,9 @@
     if (status === 403) {
       return "Registration for this event is currently closed.";
     }
+    if (status === 401) {
+      return "The registration service is unavailable right now. Please try again later.";
+    }
     if (status >= 500) {
       return "The registration service is temporarily unavailable. Please try again later.";
     }
@@ -186,7 +189,7 @@
       if (!window.QRCode || typeof window.QRCode.toCanvas !== "function") {
         throw new Error("QR library unavailable");
       }
-      window.QRCode.toCanvas(qrCanvas, ticketId, {
+      await window.QRCode.toCanvas(qrCanvas, ticketId, {
         width: 220,
         margin: 2,
         errorCorrectionLevel: "M",
@@ -196,6 +199,7 @@
       console.error("Unable to generate ticket QR code:", error);
       qrWrap.hidden = true;
       qrError.hidden = false;
+      document.getElementById("download-qr").disabled = true;
     }
 
     document.getElementById("download-qr").addEventListener("click", () => {
@@ -253,7 +257,7 @@
         displayFormError(data?.error || "We could not complete your registration. Please try again.");
         return;
       }
-      showRegistrationSuccess(data);
+      await showRegistrationSuccess(data);
     } catch (error) {
       console.error("Registration request failed:", error);
       displayFormError(error?.message?.includes("ticket details")
