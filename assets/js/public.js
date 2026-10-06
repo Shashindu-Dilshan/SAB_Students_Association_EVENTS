@@ -52,18 +52,23 @@
     image.src = logoUrl;
   }
 
+  async function fetchCurrentEvent(eventCode = "") {
+    let query = supabaseClient.from("events").select(EVENT_FIELDS);
+    if (eventCode) {
+      query = query.eq("event_code", eventCode);
+    } else {
+      query = query.order("created_at", { ascending: false }).limit(1);
+    }
+
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
   async function loadCurrentEvent() {
-    const statusMessage = document.getElementById("event-load-message");
     const noEvent = document.getElementById("no-event-state");
     const hero = document.getElementById("event-content");
-    const { data, error } = await supabaseClient
-      .from("events")
-      .select(EVENT_FIELDS)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
+    const data = await fetchCurrentEvent();
 
     if (!data) {
       hero.hidden = true;
@@ -88,20 +93,212 @@
     }
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const button = document.getElementById("register-button");
-    button.addEventListener("click", (event) => {
-      if (button.getAttribute("aria-disabled") === "true") event.preventDefault();
+  function showUnavailable(title, message) {
+    document.getElementById("registration-loading").hidden = true;
+    document.getElementById("registration-layout").hidden = true;
+    document.getElementById("registration-unavailable-title").textContent = title;
+    document.getElementById("registration-unavailable-message").textContent = message;
+    document.getElementById("registration-unavailable").hidden = false;
+  }
+
+  async function loadRegistrationEvent() {
+    const params = new URLSearchParams(window.location.search);
+    const requestedEventCode = params.get("event_code")?.trim() || "";
+    const event = await fetchCurrentEvent(requestedEventCode);
+
+    if (!event) {
+      showUnavailable(
+        "No active event is currently available.",
+        "Please return to the event page and check back later."
+      );
+      return null;
+    }
+
+    document.getElementById("registration-loading").hidden = true;
+    document.getElementById("registration-layout").hidden = false;
+    document.getElementById("registration-event-name").textContent = event.event_name || "SABSA Event";
+    const eventDate = formatEventDate(event.event_date);
+    const eventTime = event.event_time || "Time to be announced";
+    const venue = event.venue || "Venue to be announced";
+    document.getElementById("registration-event-details").textContent =
+      [eventDate, eventTime, venue].join(" · ");
+
+    if (!event.registration_open) {
+      document.getElementById("registration-form-card").hidden = true;
+      showUnavailable(
+        "Registration is closed.",
+        "Registration for this event is currently closed. Please check the SABSA events page for updates."
+      );
+      return null;
+    }
+
+    return event;
+  }
+
+  function displayFormError(message) {
+    const box = document.getElementById("form-message");
+    box.textContent = message;
+    box.hidden = false;
+    box.className = "form-error";
+  }
+
+  async function registrationErrorMessage(error) {
+    const status = error?.context?.status || error?.status || 0;
+    let serverMessage = "";
+
+    if (error?.context && typeof error.context.clone === "function") {
+      try {
+        const payload = await error.context.clone().json();
+        serverMessage = payload?.error || payload?.message || "";
+      } catch {
+        // The server may return a non-JSON error body.
+      }
+    }
+
+    if (status === 409) {
+      return "This university registration number is already registered for this event.";
+    }
+    if (status === 403) {
+      return "Registration for this event is currently closed.";
+    }
+    if (status >= 500) {
+      return "The registration service is temporarily unavailable. Please try again later.";
+    }
+    return serverMessage || "We could not complete your registration. Check your connection and try again.";
+  }
+
+  function showRegistrationSuccess(data) {
+    const ticketId = data?.ticket?.ticket_id;
+    if (typeof ticketId !== "string" || !ticketId.trim()) {
+      throw new Error("The registration was received, but the ticket details were missing. Please contact the event administration.");
+    }
+
+    document.getElementById("registration-form-card").hidden = true;
+    document.getElementById("success-welcome").textContent =
+      "Welcome, " + (data?.participant?.name || "SABSA participant");
+    document.getElementById("success-ticket-id").textContent = ticketId;
+    document.getElementById("registration-success").hidden = false;
+
+    const qrCanvas = document.getElementById("ticket-qr");
+    const qrWrap = qrCanvas.parentElement;
+    const qrError = document.getElementById("qr-error");
+    try {
+      if (!window.QRCode || typeof window.QRCode.toCanvas !== "function") {
+        throw new Error("QR library unavailable");
+      }
+      window.QRCode.toCanvas(qrCanvas, ticketId, {
+        width: 220,
+        margin: 2,
+        errorCorrectionLevel: "M",
+        color: { dark: "#10284b", light: "#ffffff" }
+      });
+    } catch (error) {
+      console.error("Unable to generate ticket QR code:", error);
+      qrWrap.hidden = true;
+      qrError.hidden = false;
+    }
+
+    document.getElementById("download-qr").addEventListener("click", () => {
+      const link = document.createElement("a");
+      link.href = qrCanvas.toDataURL("image/png");
+      link.download = ticketId + "-QR.png";
+      link.click();
+    }, { once: true });
+  }
+
+  async function handleRegistrationSubmit(event, registrationEvent) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const messageBox = document.getElementById("form-message");
+    const submitButton = document.getElementById("submit-registration");
+    messageBox.hidden = true;
+
+    const requiredFields = [...form.querySelectorAll("[required]")];
+    requiredFields.forEach((field) => {
+      field.setAttribute("aria-invalid", String(!field.value.trim() || !field.validity.valid));
     });
 
-    loadCurrentEvent().catch((error) => {
-      console.error("Unable to load event information:", error);
-      document.getElementById("event-load-message").textContent =
-        "We could not load event details right now. Please refresh the page in a moment.";
-      document.getElementById("event-load-message").hidden = false;
-      document.getElementById("registration-status").textContent = "Registration status unavailable";
-      document.getElementById("register-button").setAttribute("aria-disabled", "true");
-      document.getElementById("register-button").removeAttribute("href");
-    });
+    if (!form.reportValidity()) {
+      displayFormError("Please complete all required fields with valid information.");
+      const firstInvalid = requiredFields.find((field) => !field.value.trim() || !field.validity.valid);
+      firstInvalid?.focus();
+      return;
+    }
+
+    const formData = new FormData(form);
+    const payload = {
+      event_code: registrationEvent.event_code,
+      full_name: String(formData.get("full_name")).trim(),
+      email: String(formData.get("email")).trim(),
+      phone: String(formData.get("phone") || "").trim(),
+      registration_no: String(formData.get("registration_no")).trim(),
+      batch: String(formData.get("batch")).trim(),
+      gender: String(formData.get("gender")).trim(),
+      meal: String(formData.get("meal")).trim()
+    };
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Submitting registration…";
+    try {
+      const { data, error } = await supabaseClient.functions.invoke(
+        "register-participant",
+        { body: payload }
+      );
+
+      if (error) {
+        displayFormError(await registrationErrorMessage(error));
+        return;
+      }
+      if (!data?.success) {
+        displayFormError(data?.error || "We could not complete your registration. Please try again.");
+        return;
+      }
+      showRegistrationSuccess(data);
+    } catch (error) {
+      console.error("Registration request failed:", error);
+      displayFormError(error?.message?.includes("ticket details")
+        ? error.message
+        : "We could not connect to the registration service. Please try again.");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Complete registration →";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    if (document.body.dataset.page === "landing") {
+      const button = document.getElementById("register-button");
+      button.addEventListener("click", (event) => {
+        if (button.getAttribute("aria-disabled") === "true") event.preventDefault();
+      });
+
+      loadCurrentEvent().catch((error) => {
+        console.error("Unable to load event information:", error);
+        document.getElementById("event-load-message").textContent =
+          "We could not load event details right now. Please refresh the page in a moment.";
+        document.getElementById("event-load-message").hidden = false;
+        document.getElementById("registration-status").textContent = "Registration status unavailable";
+        document.getElementById("register-button").setAttribute("aria-disabled", "true");
+        document.getElementById("register-button").removeAttribute("href");
+      });
+    }
+
+    if (document.body.dataset.page === "registration") {
+      loadRegistrationEvent()
+        .then((registrationEvent) => {
+          if (!registrationEvent) return;
+          document.getElementById("registration-form").addEventListener(
+            "submit",
+            (event) => handleRegistrationSubmit(event, registrationEvent)
+          );
+        })
+        .catch((error) => {
+          console.error("Unable to load registration event:", error);
+          showUnavailable(
+            "Event information is unavailable.",
+            "We could not load event information right now. Please return to the event page and try again."
+          );
+        });
+    }
   });
 })();
