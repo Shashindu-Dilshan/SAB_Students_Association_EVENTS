@@ -1,128 +1,78 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event QR Scanner</title>
-    <!-- Include html5-qrcode library -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; text-align: center; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        #reader { width: 100%; margin-bottom: 20px; }
-        .hidden { display: none; }
-        
-        /* UI Panels */
-        #action-panel, #result-panel { padding: 15px; border-radius: 8px; margin-top: 15px; }
-        #action-panel { background-color: #eef2f5; border: 1px solid #cdd4d9; }
-        
-        /* Status Colors */
-        .success { background-color: #d4edda; color: #155724; border: 2px solid #28a745; }
-        .duplicate { background-color: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
-        .invalid { background-color: #fff3cd; color: #856404; border: 2px solid #ffc107; }
-        
-        /* Buttons */
-        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .btn-submit { background-color: #007bff; color: white; }
-        .btn-submit:hover { background-color: #0056b3; }
-        .btn-next { background-color: #6c757d; color: white; }
-        .btn-next:hover { background-color: #5a6268; }
-        
-        h2, h3 { margin-top: 0; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10284b">
+  <meta name="description" content="Discover the latest SABSA event and reserve your place.">
+  <title>SABSA Events | E-Ticket</title>
+  <link rel="stylesheet" href="assets/css/public.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0"></script>
+  <script src="assets/js/public.js" defer></script>
 </head>
-<body>
-
-<div class="container">
-    <h2>Event Scanner</h2>
-    
-    <!-- Camera Viewport -->
-    <div id="reader"></div>
-
-    <!-- Step 1: Scan detected, wait for submit -->
-    <div id="action-panel" class="hidden">
-        <h3>QR Detected</h3>
-        <p><strong>Ticket ID:</strong> <span id="scanned-id"></span></p>
-        <button id="btn-submit" class="btn-submit">Submit Record</button>
+<body class="public-page" data-page="landing">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="SABSA E-Ticket home">
+        <img class="brand-logo" src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png" alt="SABSA logo">
+        <span class="brand-copy"><strong>SABSA E-Ticket</strong><span>Students’ Association</span></span>
+      </a>
+      <a class="header-link" href="#how-it-works">How it works</a>
     </div>
-
-    <!-- Step 2: Show result after submit -->
-    <div id="result-panel" class="hidden">
-        <h3 id="result-name"></h3>
-        <p id="result-message"></p>
-        <button id="btn-next" class="btn-next">Scan Next Ticket</button>
-    </div>
-</div>
-
-<script>
-    // ⚠️ REPLACE THIS WITH YOUR GOOGLE APPS SCRIPT WEB APP URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbzxP2rJhidVPskLBWxa6JXfrSUr4GolJ351yfbSzorUmouEAw7Wi4DGVoHUfKcaT-CkPg/exec";
-    
-    let html5QrcodeScanner;
-    let currentScannedId = "";
-
-    // DOM Elements
-    const actionPanel = document.getElementById('action-panel');
-    const resultPanel = document.getElementById('result-panel');
-    const scannedIdDisplay = document.getElementById('scanned-id');
-    const btnSubmit = document.getElementById('btn-submit');
-    const btnNext = document.getElementById('btn-next');
-    const resultName = document.getElementById('result-name');
-    const resultMessage = document.getElementById('result-message');
-
-    function onScanSuccess(decodedText, decodedResult) {
-        // Pause the scanner to prevent multiple scans
-        html5QrcodeScanner.pause(true);
-        currentScannedId = decodedText;
-        
-        // Show Action Panel
-        scannedIdDisplay.innerText = currentScannedId;
-        actionPanel.classList.remove('hidden');
-    }
-
-    // Submit Button Logic
-    btnSubmit.addEventListener('click', async () => {
-        btnSubmit.innerText = "Processing...";
-        btnSubmit.disabled = true;
-
-        try {
-            // Call Google Apps Script API
-            const response = await fetch(`${API_URL}?id=${encodeURIComponent(currentScannedId)}`);
-            const data = await response.json();
-
-            // Hide Action Panel, Show Result Panel
-            actionPanel.classList.add('hidden');
-            resultPanel.classList.remove('hidden');
-            
-            // Apply Colors and Text based on response
-            resultPanel.className = `hidden ${data.status}`; // Add success/duplicate/invalid class
-            resultPanel.classList.remove('hidden');
-            resultName.innerText = data.name ? data.name : "Unknown Ticket";
-            resultMessage.innerText = data.message;
-
-        } catch (error) {
-            alert("Network Error. Make sure you are connected to the internet.");
-        } finally {
-            btnSubmit.innerText = "Submit Record";
-            btnSubmit.disabled = false;
-        }
-    });
-
-    // Scan Next Button Logic
-    btnNext.addEventListener('click', () => {
-        resultPanel.classList.add('hidden');
-        actionPanel.classList.add('hidden');
-        currentScannedId = "";
-        
-        // Resume Camera
-        html5QrcodeScanner.resume();
-    });
-
-    // Initialize Scanner
-    html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", { fps: 10, qrbox: {width: 250, height: 250} }, /* verbose= */ false);
-    html5QrcodeScanner.render(onScanSuccess);
-</script>
-
+  </header>
+  <main>
+    <section class="hero" id="event-content" aria-labelledby="event-name">
+      <div class="hero-inner">
+        <div class="hero-copy-block">
+          <p class="eyebrow">SABSA · Events</p>
+          <h1 id="event-name">Discover the next SABSA event</h1>
+          <p class="hero-copy" id="event-summary">Loading the latest event information…</p>
+          <div class="hero-actions">
+            <a class="button button-primary" id="register-button" href="register.html" aria-disabled="true">REGISTER NOW <span aria-hidden="true">→</span></a>
+            <a class="button button-secondary" href="#how-it-works">How it works</a>
+          </div>
+          <p class="registration-badge" id="registration-status" role="status">Checking registration status</p>
+        </div>
+        <article class="event-card" aria-label="Event details">
+          <div class="event-image-wrap">
+            <img class="event-logo" id="event-logo" alt="" hidden>
+            <span class="event-image-placeholder" id="event-logo-placeholder" aria-hidden="true">SABSA EVENT</span>
+          </div>
+          <div class="event-card-body">
+            <p class="event-card-label">Featured event</p>
+            <h2 id="event-card-name">Event details</h2>
+            <div class="event-details">
+              <div class="event-detail"><span class="detail-icon" aria-hidden="true">◷</span><span id="event-date">Date to be announced</span></div>
+              <div class="event-detail"><span class="detail-icon" aria-hidden="true">◴</span><span id="event-time">Time to be announced</span></div>
+              <div class="event-detail"><span class="detail-icon" aria-hidden="true">⌖</span><span id="event-venue">Venue to be announced</span></div>
+            </div>
+            <p class="event-description" id="event-description">Event details will appear here.</p>
+          </div>
+        </article>
+      </div>
+      <p class="page-message" id="event-load-message" role="status" hidden></p>
+    </section>
+    <section class="no-event" id="no-event-state" role="status" hidden>
+      <h1>No active event is currently available.</h1>
+      <p>Please check back later for upcoming SABSA events.</p>
+    </section>
+    <section class="content-section" id="how-it-works" aria-labelledby="how-title">
+      <div class="section-heading">
+        <p class="section-kicker">Simple and secure</p>
+        <h2 id="how-title">How it works</h2>
+        <p>Get ready for your event in four easy steps.</p>
+      </div>
+      <div class="steps">
+        <article class="step-card"><span class="step-number">01</span><h3>Register</h3><p>Complete the short form with your university details.</p></article>
+        <article class="step-card"><span class="step-number">02</span><h3>Receive your ticket</h3><p>Your registration is confirmed and your ticket is created.</p></article>
+        <article class="step-card"><span class="step-number">03</span><h3>Save your QR code</h3><p>Keep your Ticket ID and QR code somewhere easy to find.</p></article>
+        <article class="step-card"><span class="step-number">04</span><h3>Scan at the entrance</h3><p>Show your QR code to the event team when you arrive.</p></article>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <p class="footer-brand">SABSA E-Ticket</p>
+    <p>Students’ Association · Event registration and entry</p>
+  </footer>
 </body>
 </html>
