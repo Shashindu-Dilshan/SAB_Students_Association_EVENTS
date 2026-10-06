@@ -170,7 +170,7 @@
     return serverMessage || "We could not complete your registration. Check your connection and try again.";
   }
 
-  function showRegistrationSuccess(data) {
+  async function showRegistrationSuccess(data) {
     const ticketId = data?.ticket?.ticket_id;
     if (typeof ticketId !== "string" || !ticketId.trim()) {
       throw new Error("The registration was received, but the ticket details were missing. Please contact the event administration.");
