@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10284b">
+  <title>Register | SABSA E-Ticket</title>
+  <link rel="stylesheet" href="assets/css/public.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script src="assets/js/public.js" defer></script>
+</head>
+<body class="public-page" data-page="registration">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="index.html" aria-label="SABSA E-Ticket home">
+        <img class="brand-logo" src="https://sablms.casrilanka.com/pluginfile.php/1/core_admin/logo/0x200/1771390965/main-logo.png" alt="SABSA logo">
+        <span class="brand-copy"><strong>SABSA E-Ticket</strong><span>Students’ Association</span></span>
+      </a>
+      <a class="header-link" href="index.html">← Back to event</a>
+    </div>
+  </header>
+  <main class="register-main">
+    <div class="loading-card" id="registration-loading" role="status">Loading event information…</div>
+    <section class="no-event" id="registration-unavailable" role="status" hidden>
+      <h1 id="registration-unavailable-title">Registration is unavailable.</h1>
+      <p id="registration-unavailable-message">Please return to the event page for current information.</p>
+      <p><a class="button button-primary" href="index.html">Back to event</a></p>
+    </section>
+    <div class="register-layout" id="registration-layout" hidden>
+      <aside class="register-intro">
+        <p class="eyebrow">SABSA · Event registration</p>
+        <h1>Save your place.</h1>
+        <p>Complete your details below to register for this event. Your ticket will be created after your registration is confirmed.</p>
+        <div class="register-event-summary">
+          <strong id="registration-event-name">Loading event…</strong>
+          <span id="registration-event-details"></span>
+        </div>
+      </aside>
+      <section class="form-card" id="registration-form-card" aria-labelledby="form-title">
+        <h2 id="form-title">Your details</h2>
+        <p class="form-subtitle">Fields marked with * are required.</p>
+        <form id="registration-form" novalidate>
+          <div class="form-grid">
+            <div class="field field-full"><label for="full-name">Full Name *</label><input id="full-name" name="full_name" type="text" autocomplete="name" required></div>
+            <div class="field"><label for="email">Email *</label><input id="email" name="email" type="email" autocomplete="email" required></div>
+            <div class="field"><label for="phone">Phone (optional)</label><input id="phone" name="phone" type="tel" autocomplete="tel"></div>
+            <div class="field field-full"><label for="registration-no">University Registration No. *</label><input id="registration-no" name="registration_no" type="text" autocomplete="off" required></div>
+            <div class="field"><label for="batch">Batch *</label><input id="batch" name="batch" type="text" required></div>
+            <div class="field">
+              <label for="gender">Gender *</label>
+              <select id="gender" name="gender" required><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
+            </div>
+            <div class="field field-full">
+              <label for="meal">Meal *</label>
+              <select id="meal" name="meal" required><option value="">Select meal preference</option><option value="Veg">Veg</option><option value="Non Veg">Non Veg</option></select>
+            </div>
+          </div>
+          <div class="form-error" id="form-message" role="alert" hidden></div>
+          <button class="button button-primary form-submit" id="submit-registration" type="submit">Complete registration <span aria-hidden="true">→</span></button>
+          <p class="form-note">Your information is used to manage event registration and entry.</p>
+        </form>
+      </section>
+      <section class="success-card" id="registration-success" aria-labelledby="success-title" hidden>
+        <div class="success-icon" aria-hidden="true">✓</div>
+        <h1 id="success-title">Registration Successful</h1>
+        <p id="success-welcome"></p>
+        <p>Your registration has been successfully completed.</p>
+        <div class="ticket-number"><span>Ticket ID</span><strong id="success-ticket-id"></strong></div>
+        <div class="qr-wrap"><canvas id="ticket-qr" aria-label="QR code containing your Ticket ID"></canvas></div>
+        <p class="form-error" id="qr-error" role="status" hidden>QR display is unavailable right now. Please save your Ticket ID and contact the event administration if you need help.</p>
+        <p class="ticket-note">Please save your Ticket ID and QR code. Your electronic ticket may be sent separately by the event administration.</p>
+        <button class="button button-secondary" id="download-qr" type="button">Save QR code</button>
+        <p><a class="header-link" href="index.html">Return to SABSA events</a></p>
+      </section>
+    </div>
+  </main>
+  <footer class="site-footer"><p class="footer-brand">SABSA E-Ticket</p><p>Students’ Association · Event registration and entry</p></footer>
+</body>
+</html>
