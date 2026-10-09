@@ -68,43 +68,43 @@ create policy "Public can view registration events"
 create policy "Staff can view permitted events"
   on public.events for select to authenticated
   using (
-    public.has_staff_page('dashboard') or public.has_staff_page('event')
-    or public.has_staff_page('scanner') or public.has_staff_page('settings')
+    (select public.has_staff_page('dashboard')) or (select public.has_staff_page('event'))
+    or (select public.has_staff_page('scanner')) or (select public.has_staff_page('settings'))
   );
 create policy "Staff with event access can update events"
   on public.events for update to authenticated
-  using (public.has_staff_page('event'))
-  with check (public.has_staff_page('event'));
+  using ((select public.has_staff_page('event')))
+  with check ((select public.has_staff_page('event')));
 
 create policy "Staff can view permitted participants"
   on public.participants for select to authenticated
   using (
-    public.has_staff_page('dashboard') or public.has_staff_page('participants')
-    or public.has_staff_page('tickets') or public.has_staff_page('scanner')
+    (select public.has_staff_page('dashboard')) or (select public.has_staff_page('participants'))
+    or (select public.has_staff_page('tickets')) or (select public.has_staff_page('scanner'))
   );
 create policy "Staff with participant access can update participants"
   on public.participants for update to authenticated
-  using (public.has_staff_page('participants'))
-  with check (public.has_staff_page('participants'));
+  using ((select public.has_staff_page('participants')))
+  with check ((select public.has_staff_page('participants')));
 create policy "Staff with participant access can delete participants"
   on public.participants for delete to authenticated
-  using (public.has_staff_page('participants'));
+  using ((select public.has_staff_page('participants')));
 
 create policy "Staff can view permitted tickets"
   on public.tickets for select to authenticated
   using (
-    public.has_staff_page('dashboard') or public.has_staff_page('participants')
-    or public.has_staff_page('tickets') or public.has_staff_page('scanner')
+    (select public.has_staff_page('dashboard')) or (select public.has_staff_page('participants'))
+    or (select public.has_staff_page('tickets')) or (select public.has_staff_page('scanner'))
   );
 create policy "Staff with ticket or scanner access can update tickets"
   on public.tickets for update to authenticated
-  using (public.has_staff_page('tickets') or public.has_staff_page('scanner'))
-  with check (public.has_staff_page('tickets') or public.has_staff_page('scanner'));
+  using ((select public.has_staff_page('tickets')) or (select public.has_staff_page('scanner')))
+  with check ((select public.has_staff_page('tickets')) or (select public.has_staff_page('scanner')));
 
 create policy "Staff can view permitted attendance"
   on public.attendance for select to authenticated
-  using (public.has_staff_page('dashboard') or public.has_staff_page('scanner'));
+  using ((select public.has_staff_page('dashboard')) or (select public.has_staff_page('scanner')));
 create policy "Staff with scanner access can record attendance"
   on public.attendance for insert to authenticated
-  with check (public.has_staff_page('scanner'));
+  with check ((select public.has_staff_page('scanner')));
 
