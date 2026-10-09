@@ -43,7 +43,15 @@ test("staff management keeps credentials in Supabase Auth and checks ADMIN in th
   assert.match(edge, /auth\.admin\.createUser\(\{[\s\S]*?password,[\s\S]*?email_confirm: true/);
   assert.match(edge, /must_change_password: true/);
   assert.match(edge, /auth\.admin\.updateUserById\(userId, \{ password \}\)/);
+  assert.match(edge, /temporary password between 6 and 128 characters/);
+  assert.match(edge, /password\.length < 12[\s\S]*?password between 12 and 128 characters/);
   assert.doesNotMatch(edge, /encrypted_password|password_hash\s*:/);
+});
+
+test("the staff creation form accepts six-character temporary passwords", async () => {
+  const settings = await read("settings.html");
+  assert.match(settings, /id="staffTemporaryPassword"[^>]*minlength="6"/);
+  assert.match(settings, /At least 6 characters\. Share it securely/);
 });
 
 test("ticket email functions enforce page permission and forced-password state", async () => {
