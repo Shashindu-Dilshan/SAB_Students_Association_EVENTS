@@ -13,6 +13,7 @@
   <title>SABSA E-Ticket Admin</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/staff-access.js"></script>
 
   <style>
 
@@ -305,7 +306,7 @@ document
         } =
           await supabaseClient
             .from("admins")
-            .select("id, email, role")
+            .select("id, email, role, page_permissions, must_change_password, is_active")
             .eq("id", user.id)
             .maybeSingle();
 
@@ -315,7 +316,7 @@ document
         }
 
 
-        if (!admin) {
+        if (!admin || !admin.is_active) {
 
           await supabaseClient.auth
             .signOut();
@@ -348,8 +349,12 @@ document
         // Successful login
         // -----------------------------------------------
 
-        message.textContent =
-          "Login successful. Opening dashboard...";
+        const destination = admin.role === "STAFF" && admin.must_change_password
+          ? "force-password-change.html"
+          : window.staffLandingPage(admin);
+        message.textContent = admin.role === "STAFF" && admin.must_change_password
+          ? "Sign-in successful. Set your permanent password to continue."
+          : "Login successful. Opening your page...";
 
         message.className =
           "message success";
@@ -361,8 +366,7 @@ document
         setTimeout(
           function() {
 
-            window.location.href =
-              "admin-dashboard.html";
+            window.location.href = destination;
 
           },
           700
@@ -418,16 +422,15 @@ async function checkExistingSession() {
     } =
       await supabaseClient
         .from("admins")
-        .select("id, email, role")
+        .select("id, email, role, page_permissions, must_change_password, is_active")
         .eq("id", user.id)
         .maybeSingle();
 
 
-    if (admin) {
-
-      window.location.href =
-        "admin-dashboard.html";
-
+    if (admin && admin.is_active) {
+      window.location.href = admin.role === "STAFF" && admin.must_change_password
+        ? "force-password-change.html"
+        : window.staffLandingPage(admin);
     }
 
   }
@@ -442,3 +445,4 @@ checkExistingSession();
 </body>
 
 </html>
+

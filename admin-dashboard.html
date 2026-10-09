@@ -14,6 +14,7 @@
   <title>SABSA E-Ticket Admin Dashboard</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/staff-access.js"></script>
 
   <link rel="stylesheet" href="assets/css/sidebar.css">
   <style>
@@ -392,6 +393,8 @@ const supabaseClient =
 async function initializeDashboard() {
 
   try {
+
+    await window.requireStaffPageAccess(supabaseClient, 'dashboard');
 
     // -----------------------------------------------------
     // Check session
@@ -981,3 +984,4 @@ initializeDashboard();
 </body>
 
 </html>
+
