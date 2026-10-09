@@ -8,6 +8,7 @@
   <title>Participants | SABSA E-Ticket System</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/staff-access.js"></script>
 
   <style>
     * {
@@ -1549,6 +1550,8 @@ document.addEventListener(
 ========================================================= */
 
 async function checkAuthentication() {
+
+  await window.requireStaffPageAccess(supabaseClient, 'participants');
 
   try {
 
@@ -3748,3 +3751,4 @@ supabaseClient.auth.onAuthStateChange(
 
 </body>
 </html>
+

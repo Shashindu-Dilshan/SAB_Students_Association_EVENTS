@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="assets/css/admin.css">
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/staff-access.js"></script>
 
     <style>
         /* =====================================================
@@ -854,6 +855,8 @@
         ===================================================== */
 
         async function checkAuthentication() {
+
+            await window.requireStaffPageAccess(supabaseClient, 'tickets');
 
             try {
 
@@ -2552,3 +2555,4 @@
 </body>
 
 </html>
+

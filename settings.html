@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="assets/css/admin.css">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/staff-access.js"></script>
 
   <style>
     /* =========================================
@@ -241,6 +242,25 @@
       background: #fee2e2;
     }
 
+    .staff-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
+    .staff-form-grid label { display: grid; gap: 6px; color: #374151; font-size: 13px; }
+    .staff-form-grid input[type="email"], .staff-form-grid input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
+    .permission-list { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .permission-list label { display: flex; align-items: center; gap: 8px; padding: 10px; background: #f9fafb; border-radius: 8px; }
+    .staff-table-wrap { overflow-x: auto; margin-top: 20px; }
+    .staff-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .staff-table th, .staff-table td { padding: 11px 9px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    .staff-table td:last-child { white-space: nowrap; }
+    .staff-permissions { min-width: 190px; }
+    .staff-result { margin-top: 14px; font-size: 13px; white-space: pre-wrap; }
+    .staff-result.error { color: #b91c1c; }
+    .staff-result.success { color: #15803d; }
+    .staff-password-reveal { margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px; overflow-wrap: anywhere; }
+    @media (max-width: 600px) {
+      .staff-form-grid, .permission-list { grid-template-columns: 1fr; }
+      .permission-list { grid-column: auto; }
+    }
+
     .loading-text {
       color: #6b7280;
       font-size: 13px;
@@ -463,6 +483,33 @@
 
       </div>
 
+
+      <div class="card settings-full" id="staffManagementCard" hidden>
+        <div class="card-header"><div class="card-title">Staff Management</div></div>
+        <p class="setting-label">Create staff accounts, choose page access, update permissions, or deactivate an account. Staff must change the temporary password at first sign-in.</p>
+        <form id="staffCreateForm" class="staff-form-grid">
+          <label>Email address<input id="staffEmail" type="email" autocomplete="off" required></label>
+          <label>Temporary password<input id="staffTemporaryPassword" type="password" minlength="12" autocomplete="new-password" required><small>At least 12 characters. Share it securely; it is shown once.</small></label>
+          <div class="permission-list" id="staffPermissionChoices">
+            <label><input type="checkbox" value="dashboard">Dashboard</label>
+            <label><input type="checkbox" value="participants">Participants</label>
+            <label><input type="checkbox" value="tickets">Tickets</label>
+            <label><input type="checkbox" value="event">Event</label>
+            <label><input type="checkbox" value="scanner">Scanner</label>
+            <label><input type="checkbox" value="settings">Settings</label>
+          </div>
+          <div><button class="btn btn-primary" type="submit" id="createStaffButton">Create staff account</button></div>
+        </form>
+        <div id="staffCreateResult" class="staff-result" role="status" aria-live="polite"></div>
+        <div id="temporaryPasswordReveal" class="staff-password-reveal" hidden></div>
+        <div class="card-actions" style="margin-top:22px"><strong>Staff accounts</strong><button type="button" class="refresh-btn" id="refreshStaffButton">Refresh list</button></div>
+        <div class="staff-table-wrap">
+          <table class="staff-table"><thead><tr><th>Email</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="staffList"><tr><td colspan="4">Loading staff accounts…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="staffListResult" class="staff-result" role="status" aria-live="polite"></div>
+      </div>
 
       <!-- =====================================
            SYSTEM INFORMATION
@@ -1141,6 +1188,11 @@
 
         await checkAuthentication();
 
+        if (currentAdmin && currentAdmin.role === 'ADMIN') {
+          document.getElementById('staffManagementCard').hidden = false;
+          await loadStaffAccounts();
+        }
+
         await loadCurrentEvent();
 
         await runHealthCheck();
@@ -1163,6 +1215,8 @@
   ========================================== */
 
   async function checkAuthentication() {
+
+    await window.requireStaffPageAccess(supabaseClient, 'settings');
 
     const {
       data: {
@@ -1195,7 +1249,7 @@
       await supabaseClient
         .from('admins')
         .select(
-          'id, email, role'
+          'id, email, role, page_permissions, must_change_password, is_active'
         )
         .eq(
           'id',
@@ -1294,7 +1348,114 @@
     ).textContent =
       role;
 
+    return true;
+
   }
+
+
+  const pageLabels = {
+    dashboard: 'Dashboard', participants: 'Participants', tickets: 'Tickets',
+    event: 'Event', scanner: 'Scanner', settings: 'Settings'
+  };
+
+  function setStaffMessage(elementId, message, isError = false) {
+    const element = document.getElementById(elementId);
+    element.textContent = message || '';
+    element.className = `staff-result ${isError ? 'error' : 'success'}`;
+  }
+
+  async function callStaffFunction(body) {
+    const { data, error } = await supabaseClient.functions.invoke('staff-management', { body });
+    if (error) throw new Error(data?.error || error.message || 'Staff request failed.');
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }
+
+  async function loadStaffAccounts() {
+    const tbody = document.getElementById('staffList');
+    tbody.replaceChildren();
+    const loading = tbody.insertRow();
+    loading.insertCell().textContent = 'Loading staff accounts…';
+    loading.cells[0].colSpan = 4;
+    try {
+      const { staff = [] } = await callStaffFunction({ action: 'list' });
+      tbody.replaceChildren();
+      if (!staff.length) {
+        const row = tbody.insertRow();
+        row.insertCell().textContent = 'No staff accounts yet.';
+        row.cells[0].colSpan = 4;
+        return;
+      }
+      for (const account of staff) {
+        const row = tbody.insertRow();
+        row.insertCell().textContent = account.email || '';
+        const accessCell = row.insertCell();
+        accessCell.className = 'staff-permissions';
+        for (const [key, label] of Object.entries(pageLabels)) {
+          const wrapper = document.createElement('label');
+          wrapper.style.marginRight = '8px';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = key;
+          checkbox.checked = account.page_permissions.includes(key);
+          wrapper.append(checkbox, document.createTextNode(label));
+          accessCell.append(wrapper);
+        }
+        row.insertCell().textContent = !account.is_active ? 'Inactive' : account.must_change_password ? 'Password change required' : 'Active';
+        const actions = row.insertCell();
+        const save = document.createElement('button');
+        save.type = 'button'; save.className = 'refresh-btn'; save.textContent = 'Save access';
+        save.addEventListener('click', async () => {
+          const permissions = [...accessCell.querySelectorAll('input:checked')].map(input => input.value);
+          try {
+            await callStaffFunction({ action: 'update-permissions', id: account.id, page_permissions: permissions });
+            setStaffMessage('staffListResult', `Access updated for ${account.email}.`);
+          } catch (error) { setStaffMessage('staffListResult', error.message, true); }
+        });
+        const toggle = document.createElement('button');
+        toggle.type = 'button'; toggle.className = 'refresh-btn'; toggle.style.marginLeft = '6px';
+        toggle.textContent = account.is_active ? 'Deactivate' : 'Reactivate';
+        toggle.addEventListener('click', async () => {
+          try {
+            await callStaffFunction({ action: 'set-active', id: account.id, is_active: !account.is_active });
+            await loadStaffAccounts();
+          } catch (error) { setStaffMessage('staffListResult', error.message, true); }
+        });
+        actions.append(save, toggle);
+      }
+    } catch (error) {
+      tbody.replaceChildren();
+      const row = tbody.insertRow();
+      row.insertCell().textContent = 'Unable to load staff accounts.';
+      row.cells[0].colSpan = 4;
+      setStaffMessage('staffListResult', error.message, true);
+    }
+  }
+
+  document.getElementById('staffCreateForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = document.getElementById('createStaffButton');
+    const permissions = [...document.querySelectorAll('#staffPermissionChoices input:checked')].map(input => input.value);
+    const email = document.getElementById('staffEmail').value.trim();
+    const temporaryPassword = document.getElementById('staffTemporaryPassword').value;
+    const reveal = document.getElementById('temporaryPasswordReveal');
+    reveal.hidden = true;
+    button.disabled = true;
+    try {
+      await callStaffFunction({ action: 'create', email, temporary_password: temporaryPassword, page_permissions: permissions });
+      setStaffMessage('staffCreateResult', `Staff account created for ${email}. Copy the temporary password below and share it securely.`);
+      reveal.textContent = `Temporary password for ${email}: ${temporaryPassword}`;
+      reveal.hidden = false;
+      document.getElementById('staffCreateForm').reset();
+      await loadStaffAccounts();
+    } catch (error) {
+      setStaffMessage('staffCreateResult', error.message, true);
+    } finally {
+      button.disabled = false;
+      document.getElementById('staffTemporaryPassword').value = '';
+    }
+  });
+  document.getElementById('refreshStaffButton').addEventListener('click', loadStaffAccounts);
 
 
   /* =========================================
@@ -1575,6 +1736,21 @@
     elementId
   ) {
 
+    const tablePage = {
+      events: ['event', 'scanner', 'dashboard', 'settings'],
+      participants: ['participants', 'tickets', 'scanner', 'dashboard'],
+      tickets: ['participants', 'tickets', 'scanner', 'dashboard'],
+      attendance: ['scanner', 'dashboard']
+    }[table] || [];
+
+    if (
+      currentAdmin?.role === 'STAFF' &&
+      !tablePage.some(page => currentAdmin.page_permissions?.includes(page))
+    ) {
+      setHealth(elementId, 'Not granted', false);
+      return;
+    }
+
     const {
       error
     } =
@@ -1702,3 +1878,4 @@
 
 </body>
 </html>
+
