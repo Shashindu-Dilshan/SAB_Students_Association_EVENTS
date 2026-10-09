@@ -78,8 +78,8 @@ Deno.serve(async (request: Request) => {
     const password = body.temporary_password;
     const permissions = body.page_permissions;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Enter a valid email address." }, 400);
-    if (typeof password !== "string" || password.length < 12 || password.length > 128) {
-      return json({ error: "Use a temporary password between 12 and 128 characters." }, 400);
+    if (typeof password !== "string" || password.length < 6 || password.length > 128) {
+      return json({ error: "Use a temporary password between 6 and 128 characters." }, 400);
     }
     if (!Array.isArray(permissions) || permissions.length === 0 ||
       permissions.some((page) => typeof page !== "string" || !validPages.has(page))) {
