@@ -1,6 +1,6 @@
 # Staff management deployment
 
-Staff accounts use Supabase Auth for email and password credentials. The `admins` table stores each staff member's role, selected page grants, active state, and whether the first-login password change is pending. The browser never writes passwords to SQL. The `staff-management` Edge Function uses `SUPABASE_SERVICE_ROLE_KEY` only on the server and permits staff-management actions only for an active `ADMIN`.
+Staff accounts use Supabase Auth for email and password credentials. Temporary passwords must be at least 6 characters; staff set a permanent password of at least 12 characters on first sign-in. The `admins` table stores each staff member's role, selected page grants, active state, and whether the first-login password change is pending. The browser never writes passwords to SQL. The `staff-management` Edge Function uses `SUPABASE_SERVICE_ROLE_KEY` only on the server and permits staff-management actions only for an active `ADMIN`.
 
 ## Deploy
 
