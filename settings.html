@@ -242,23 +242,77 @@
       background: #fee2e2;
     }
 
-    .staff-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; }
-    .staff-form-grid label { display: grid; gap: 6px; color: #374151; font-size: 13px; }
-    .staff-form-grid input[type="email"], .staff-form-grid input[type="password"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; }
-    .permission-list { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .permission-list label { display: flex; align-items: center; gap: 8px; padding: 10px; background: #f9fafb; border-radius: 8px; }
-    .staff-table-wrap { overflow-x: auto; margin-top: 20px; }
-    .staff-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .staff-table th, .staff-table td { padding: 11px 9px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    .staff-table td:last-child { white-space: nowrap; }
-    .staff-permissions { min-width: 190px; }
-    .staff-result { margin-top: 14px; font-size: 13px; white-space: pre-wrap; }
+    .staff-intro { margin: 0 0 22px; color: #6b7280; font-size: 13px; line-height: 1.6; }
+    .staff-create-form { display: grid; gap: 22px; }
+    .staff-form-section { padding: 18px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+    .staff-section-heading { margin: 0 0 15px; color: #111827; font-size: 14px; font-weight: 700; }
+    .staff-identity-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .staff-field { display: grid; align-content: start; gap: 7px; color: #374151; font-size: 13px; font-weight: 600; }
+    .staff-field input { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #111827; font: inherit; font-weight: 400; }
+    .staff-field input:focus, .staff-filter:focus { outline: 3px solid rgba(37, 99, 235, .16); border-color: #2563eb; }
+    .staff-field small { color: #6b7280; font-size: 12px; font-weight: 400; line-height: 1.5; }
+    .staff-permission-options { display: flex; flex-wrap: wrap; gap: 9px; }
+    .staff-permission-choice { display: inline-flex !important; align-items: center; gap: 8px !important; min-height: 38px; padding: 8px 11px; border: 1px solid #d1d5db; border-radius: 999px; background: #fff; color: #374151; cursor: pointer; font-size: 12px !important; font-weight: 600; }
+    .staff-permission-choice:has(input:checked) { border-color: #93c5fd; background: #eff6ff; color: #1d4ed8; }
+    .staff-permission-choice input { accent-color: #2563eb; margin: 0; }
+    .staff-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .staff-form-note, .staff-table-note { margin: 0; color: #6b7280; font-size: 12px; line-height: 1.5; }
+    .staff-password-reveal { margin-top: 12px; padding: 12px; border: 1px solid #fcd34d; border-radius: 8px; background: #fffbeb; color: #92400e; font-size: 13px; overflow-wrap: anywhere; }
+    .staff-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-top: 26px; }
+    .staff-toolbar-title { display: grid; gap: 4px; }
+    .staff-toolbar-title strong { color: #111827; font-size: 15px; }
+    .staff-filters { display: flex; flex-wrap: wrap; gap: 10px; }
+    .staff-filter-group { display: grid; gap: 5px; color: #6b7280; font-size: 11px; font-weight: 700; }
+    .staff-filter { min-width: 145px; height: 38px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #374151; font-size: 12px; }
+    .staff-search { min-width: 220px; }
+    .staff-table-wrap { overflow-x: auto; margin-top: 14px; border: 1px solid #e5e7eb; border-radius: 10px; }
+    .staff-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .staff-table th, .staff-table td { padding: 13px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid #e5e7eb; }
+    .staff-table th { background: #f9fafb; color: #6b7280; font-size: 11px; font-weight: 700; letter-spacing: .035em; text-transform: uppercase; }
+    .staff-table tbody tr:last-child td { border-bottom: 0; }
+    .staff-email-cell { min-width: 180px; color: #111827; font-weight: 600; overflow-wrap: anywhere; }
+    .staff-role-pill, .staff-status-pill, .staff-access-badge { display: inline-flex; align-items: center; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .staff-role-pill { padding: 5px 9px; background: #eff6ff; color: #1d4ed8; }
+    .staff-status-pill { padding: 5px 9px; background: #dcfce7; color: #15803d; }
+    .staff-status-pill.pending { background: #fef3c7; color: #b45309; }
+    .staff-status-pill.inactive { background: #f3f4f6; color: #6b7280; }
+    .staff-permissions { min-width: 230px; }
+    .staff-permission-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+    .staff-access-toggle { display: inline-flex !important; align-items: center; gap: 5px !important; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; color: #6b7280; cursor: pointer; font-size: 10px !important; white-space: nowrap; }
+    .staff-access-toggle:has(input:checked) { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; }
+    .staff-access-toggle input { width: 12px; height: 12px; margin: 0; accent-color: #2563eb; }
+    .staff-actions { display: flex; flex-wrap: wrap; gap: 7px; min-width: 150px; }
+    .staff-action-button { min-height: 34px; padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 7px; background: #fff; color: #374151; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .staff-action-button:hover { background: #f9fafb; }
+    .staff-action-button.primary { border-color: #2563eb; background: #2563eb; color: #fff; }
+    .staff-action-button.primary:hover { background: #1d4ed8; }
+    .staff-action-button:disabled, .btn:disabled { cursor: wait; opacity: .6; }
+    .staff-empty { padding: 22px !important; color: #6b7280; text-align: center !important; }
+    .staff-result { margin-top: 12px; font-size: 13px; white-space: pre-wrap; }
     .staff-result.error { color: #b91c1c; }
     .staff-result.success { color: #15803d; }
-    .staff-password-reveal { margin-top: 12px; padding: 12px; background: #fef3c7; border-radius: 8px; overflow-wrap: anywhere; }
+    @media (max-width: 800px) {
+      .staff-toolbar { align-items: stretch; flex-direction: column; }
+      .staff-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .staff-search { grid-column: 1 / -1; min-width: 0; }
+    }
     @media (max-width: 600px) {
-      .staff-form-grid, .permission-list { grid-template-columns: 1fr; }
-      .permission-list { grid-column: auto; }
+      .staff-identity-grid, .staff-filters { grid-template-columns: 1fr; }
+      .staff-form-section { padding: 14px; }
+      .staff-form-footer { align-items: stretch; flex-direction: column; }
+      .staff-form-footer .btn { width: 100%; }
+      .staff-search { grid-column: auto; }
+      .staff-table-wrap { overflow: visible; border: 0; }
+      .staff-table, .staff-table tbody { display: block; width: 100%; }
+      .staff-table thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .staff-table tbody tr { display: grid; gap: 0; margin-bottom: 12px; padding: 4px 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+      .staff-table tbody tr:last-child { border-bottom: 1px solid #e5e7eb; }
+      .staff-table td { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+      .staff-table td::before { content: attr(data-label); color: #6b7280; font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
+      .staff-table td.staff-empty { display: block; text-align: center !important; }
+      .staff-table td.staff-empty::before { content: none; }
+      .staff-permissions { min-width: 0; }
+      .staff-actions { min-width: 0; }
     }
 
     .loading-text {
@@ -486,28 +540,48 @@
 
       <div class="card settings-full" id="staffManagementCard" hidden>
         <div class="card-header"><div class="card-title">Staff Management</div></div>
-        <p class="setting-label">Create staff accounts, choose page access, update permissions, or deactivate an account. Staff must change the temporary password at first sign-in.</p>
-        <form id="staffCreateForm" class="staff-form-grid">
-          <label>Email address<input id="staffEmail" type="email" autocomplete="off" required></label>
-          <label>Temporary password<input id="staffTemporaryPassword" type="password" minlength="6" autocomplete="new-password" required><small>At least 6 characters. Share it securely; it is shown once.</small></label>
-          <div class="permission-list" id="staffPermissionChoices">
-            <label><input type="checkbox" value="dashboard">Dashboard</label>
-            <label><input type="checkbox" value="participants">Participants</label>
-            <label><input type="checkbox" value="tickets">Tickets</label>
-            <label><input type="checkbox" value="event">Event</label>
-            <label><input type="checkbox" value="scanner">Scanner</label>
-            <label><input type="checkbox" value="settings">Settings</label>
+        <p class="staff-intro">Create staff accounts and choose the pages each person can access. Staff must change the temporary password at first sign-in. Existing access settings are shown below and only change when you save them.</p>
+        <form id="staffCreateForm" class="staff-create-form">
+          <section class="staff-form-section" aria-labelledby="staffAccountDetailsHeading">
+            <h3 class="staff-section-heading" id="staffAccountDetailsHeading">Account details</h3>
+            <div class="staff-identity-grid">
+              <label class="staff-field">Email address<input id="staffEmail" type="email" autocomplete="off" placeholder="name@example.com" required></label>
+              <label class="staff-field">Temporary password<input id="staffTemporaryPassword" type="password" minlength="6" autocomplete="new-password" required><small>At least 6 characters. Share it securely; it is shown once.</small></label>
+            </div>
+          </section>
+          <section class="staff-form-section" aria-labelledby="staffPageAccessHeading">
+            <h3 class="staff-section-heading" id="staffPageAccessHeading">Page access</h3>
+            <div class="staff-permission-options" id="staffPermissionChoices">
+              <label class="staff-permission-choice"><input type="checkbox" value="dashboard">Dashboard</label>
+              <label class="staff-permission-choice"><input type="checkbox" value="participants">Participants</label>
+              <label class="staff-permission-choice"><input type="checkbox" value="tickets">Tickets</label>
+              <label class="staff-permission-choice"><input type="checkbox" value="event">Event</label>
+              <label class="staff-permission-choice"><input type="checkbox" value="scanner">Scanner</label>
+              <label class="staff-permission-choice"><input type="checkbox" value="settings">Settings</label>
+            </div>
+          </section>
+          <div class="staff-form-footer">
+            <p class="staff-form-note">Accounts are created as STAFF. Page access can be changed later.</p>
+            <button class="btn btn-primary" type="submit" id="createStaffButton">Create staff account</button>
           </div>
-          <div><button class="btn btn-primary" type="submit" id="createStaffButton">Create staff account</button></div>
         </form>
         <div id="staffCreateResult" class="staff-result" role="status" aria-live="polite"></div>
         <div id="temporaryPasswordReveal" class="staff-password-reveal" hidden></div>
-        <div class="card-actions" style="margin-top:22px"><strong>Staff accounts</strong><button type="button" class="refresh-btn" id="refreshStaffButton">Refresh list</button></div>
+        <div class="staff-toolbar">
+          <div class="staff-toolbar-title"><strong>Staff accounts</strong><p class="staff-table-note">Role is STAFF for every account in this section; administrator accounts are not managed here.</p></div>
+          <div class="staff-filters" aria-label="Filter staff accounts">
+            <label class="staff-filter-group">Search email<input class="staff-filter staff-search" id="staffSearch" type="search" placeholder="Search by email"></label>
+            <label class="staff-filter-group">Account status<select class="staff-filter" id="staffStatusFilter"><option value="all">All statuses</option><option value="active">Active</option><option value="setup">Password setup required</option><option value="inactive">Inactive</option></select></label>
+            <label class="staff-filter-group">Role<select class="staff-filter" id="staffRoleFilter"><option value="all">All staff roles</option><option value="STAFF">STAFF</option></select></label>
+            <button type="button" class="refresh-btn" id="refreshStaffButton">Refresh list</button>
+          </div>
+        </div>
         <div class="staff-table-wrap">
-          <table class="staff-table"><thead><tr><th>Email</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead>
-            <tbody id="staffList"><tr><td colspan="4">Loading staff accounts…</td></tr></tbody>
+          <table class="staff-table"><thead><tr><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Page permissions</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+            <tbody id="staffList"><tr><td class="staff-empty" colspan="5">Loading staff accounts…</td></tr></tbody>
           </table>
         </div>
+        <p class="staff-table-note" style="margin-top:12px">Password reset or resend and permanent deletion are not available in the current staff-management service. Deactivate an account to revoke page access.</p>
         <div id="staffListResult" class="staff-result" role="status" aria-live="polite"></div>
       </div>
 
@@ -1357,6 +1431,7 @@
     dashboard: 'Dashboard', participants: 'Participants', tickets: 'Tickets',
     event: 'Event', scanner: 'Scanner', settings: 'Settings'
   };
+  let staffAccounts = [];
 
   function setStaffMessage(elementId, message, isError = false) {
     const element = document.getElementById(elementId);
@@ -1375,60 +1450,138 @@
     const tbody = document.getElementById('staffList');
     tbody.replaceChildren();
     const loading = tbody.insertRow();
-    loading.insertCell().textContent = 'Loading staff accounts…';
-    loading.cells[0].colSpan = 4;
+    const loadingCell = loading.insertCell();
+    loadingCell.className = 'staff-empty';
+    loadingCell.textContent = 'Loading staff accounts…';
+    loadingCell.colSpan = 5;
     try {
       const { staff = [] } = await callStaffFunction({ action: 'list' });
-      tbody.replaceChildren();
-      if (!staff.length) {
-        const row = tbody.insertRow();
-        row.insertCell().textContent = 'No staff accounts yet.';
-        row.cells[0].colSpan = 4;
-        return;
-      }
-      for (const account of staff) {
-        const row = tbody.insertRow();
-        row.insertCell().textContent = account.email || '';
-        const accessCell = row.insertCell();
-        accessCell.className = 'staff-permissions';
-        for (const [key, label] of Object.entries(pageLabels)) {
-          const wrapper = document.createElement('label');
-          wrapper.style.marginRight = '8px';
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.value = key;
-          checkbox.checked = account.page_permissions.includes(key);
-          wrapper.append(checkbox, document.createTextNode(label));
-          accessCell.append(wrapper);
-        }
-        row.insertCell().textContent = !account.is_active ? 'Inactive' : account.must_change_password ? 'Password change required' : 'Active';
-        const actions = row.insertCell();
-        const save = document.createElement('button');
-        save.type = 'button'; save.className = 'refresh-btn'; save.textContent = 'Save access';
-        save.addEventListener('click', async () => {
-          const permissions = [...accessCell.querySelectorAll('input:checked')].map(input => input.value);
-          try {
-            await callStaffFunction({ action: 'update-permissions', id: account.id, page_permissions: permissions });
-            setStaffMessage('staffListResult', `Access updated for ${account.email}.`);
-          } catch (error) { setStaffMessage('staffListResult', error.message, true); }
-        });
-        const toggle = document.createElement('button');
-        toggle.type = 'button'; toggle.className = 'refresh-btn'; toggle.style.marginLeft = '6px';
-        toggle.textContent = account.is_active ? 'Deactivate' : 'Reactivate';
-        toggle.addEventListener('click', async () => {
-          try {
-            await callStaffFunction({ action: 'set-active', id: account.id, is_active: !account.is_active });
-            await loadStaffAccounts();
-          } catch (error) { setStaffMessage('staffListResult', error.message, true); }
-        });
-        actions.append(save, toggle);
-      }
+      staffAccounts = staff;
+      renderStaffAccounts();
     } catch (error) {
       tbody.replaceChildren();
       const row = tbody.insertRow();
-      row.insertCell().textContent = 'Unable to load staff accounts.';
-      row.cells[0].colSpan = 4;
+      const cell = row.insertCell();
+      cell.className = 'staff-empty';
+      cell.textContent = 'Unable to load staff accounts.';
+      cell.colSpan = 5;
       setStaffMessage('staffListResult', error.message, true);
+    }
+  }
+
+  function renderStaffAccounts() {
+    const tbody = document.getElementById('staffList');
+    const search = document.getElementById('staffSearch').value.trim().toLowerCase();
+    const statusFilter = document.getElementById('staffStatusFilter').value;
+    const roleFilter = document.getElementById('staffRoleFilter').value;
+    const visibleAccounts = staffAccounts.filter((account) => {
+      const emailMatches = (account.email || '').toLowerCase().includes(search);
+      const status = !account.is_active ? 'inactive' : account.must_change_password ? 'setup' : 'active';
+      return emailMatches && (statusFilter === 'all' || status === statusFilter) &&
+        (roleFilter === 'all' || account.role === roleFilter);
+    });
+    tbody.replaceChildren();
+
+    if (!visibleAccounts.length) {
+      const row = tbody.insertRow();
+      const cell = row.insertCell();
+      cell.className = 'staff-empty';
+      cell.colSpan = 5;
+      cell.textContent = staffAccounts.length ? 'No staff accounts match these filters.' : 'No staff accounts yet.';
+      return;
+    }
+
+    for (const account of visibleAccounts) {
+      const row = tbody.insertRow();
+      const emailCell = row.insertCell();
+      emailCell.dataset.label = 'Email';
+      emailCell.className = 'staff-email-cell';
+      emailCell.textContent = account.email || '';
+
+      const roleCell = row.insertCell();
+      roleCell.dataset.label = 'Role';
+      const roleBadge = document.createElement('span');
+      roleBadge.className = 'staff-role-pill';
+      roleBadge.textContent = account.role || 'STAFF';
+      roleCell.append(roleBadge);
+
+      const accessCell = row.insertCell();
+      accessCell.dataset.label = 'Page permissions';
+      accessCell.className = 'staff-permissions';
+      const toggles = document.createElement('div');
+      toggles.className = 'staff-permission-toggles';
+      const savedPermissions = Array.isArray(account.page_permissions) ? account.page_permissions : [];
+      for (const [key, label] of Object.entries(pageLabels)) {
+        const wrapper = document.createElement('label');
+        wrapper.className = 'staff-access-toggle';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = key;
+        checkbox.checked = savedPermissions.includes(key);
+        checkbox.setAttribute('aria-label', `${label} access for ${account.email}`);
+        wrapper.append(checkbox, document.createTextNode(label));
+        toggles.append(wrapper);
+      }
+      accessCell.append(toggles);
+
+      const statusCell = row.insertCell();
+      statusCell.dataset.label = 'Status';
+      const statusBadge = document.createElement('span');
+      statusBadge.className = `staff-status-pill${!account.is_active ? ' inactive' : account.must_change_password ? ' pending' : ''}`;
+      statusBadge.textContent = !account.is_active ? 'Inactive' : account.must_change_password ? 'Setup required' : 'Active';
+      statusCell.append(statusBadge);
+
+      const actions = row.insertCell();
+      actions.dataset.label = 'Actions';
+      actions.className = 'staff-actions';
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.className = 'staff-action-button primary';
+      save.textContent = 'Save access';
+      save.addEventListener('click', async () => {
+        const permissions = [...toggles.querySelectorAll('input:checked')].map(input => input.value);
+        const current = [...savedPermissions].sort().join('|');
+        const next = [...permissions].sort().join('|');
+        if (current === next) {
+          setStaffMessage('staffListResult', `No access changes to save for ${account.email}.`);
+          return;
+        }
+        if (!window.confirm(`Save the selected page access for ${account.email}?`)) return;
+        save.disabled = true;
+        try {
+          await callStaffFunction({ action: 'update-permissions', id: account.id, page_permissions: permissions });
+          await loadStaffAccounts();
+          setStaffMessage('staffListResult', `Access updated for ${account.email}.`);
+        } catch (error) {
+          setStaffMessage('staffListResult', error.message, true);
+        } finally {
+          save.disabled = false;
+        }
+      });
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'staff-action-button';
+      toggle.textContent = account.is_active ? 'Deactivate' : 'Activate';
+      toggle.addEventListener('click', async () => {
+        const activating = !account.is_active;
+        const actionText = activating ? 'activate' : 'deactivate';
+        const confirmation = activating
+          ? `Activate ${account.email}? They will regain access to their assigned pages.`
+          : `Deactivate ${account.email}? Their access to staff pages will be revoked.`;
+        if (!window.confirm(confirmation)) return;
+        toggle.disabled = true;
+        try {
+          await callStaffFunction({ action: 'set-active', id: account.id, is_active: activating });
+          await loadStaffAccounts();
+          setStaffMessage('staffListResult', `${account.email} was ${actionText}d.`);
+        } catch (error) {
+          setStaffMessage('staffListResult', error.message, true);
+        } finally {
+          toggle.disabled = false;
+        }
+      });
+      actions.append(save, toggle);
     }
   }
 
@@ -1439,6 +1592,7 @@
     const email = document.getElementById('staffEmail').value.trim();
     const temporaryPassword = document.getElementById('staffTemporaryPassword').value;
     const reveal = document.getElementById('temporaryPasswordReveal');
+    if (!window.confirm(`Create a STAFF account for ${email} with the selected page permissions?`)) return;
     reveal.hidden = true;
     button.disabled = true;
     try {
@@ -1456,6 +1610,9 @@
     }
   });
   document.getElementById('refreshStaffButton').addEventListener('click', loadStaffAccounts);
+  document.getElementById('staffSearch').addEventListener('input', renderStaffAccounts);
+  document.getElementById('staffStatusFilter').addEventListener('change', renderStaffAccounts);
+  document.getElementById('staffRoleFilter').addEventListener('change', renderStaffAccounts);
 
 
   /* =========================================
