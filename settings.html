@@ -1439,9 +1439,60 @@
     element.className = `staff-result ${isError ? 'error' : 'success'}`;
   }
 
+  function getStaffFunctionStatus(error) {
+    const status = error?.context?.status;
+    return Number.isInteger(status) ? status : null;
+  }
+
+  async function getStaffFunctionErrorMessage(error) {
+    const status = getStaffFunctionStatus(error);
+    let responseBody = null;
+    if (error?.context && typeof error.context.clone === 'function') {
+      try {
+        responseBody = await error.context.clone().json();
+      } catch {
+        responseBody = null;
+      }
+    }
+
+    if (status === 401) return 'Your sign-in could not be verified. Please sign in again, then retry.';
+    if (status === 403) return 'Administrator access is required to manage staff accounts.';
+    if (status === 503 || status >= 500) return 'Staff management service is temporarily unavailable. Please try again later.';
+    if ([400, 404].includes(status) && typeof responseBody?.error === 'string') return responseBody.error;
+    if (status === null) return 'Staff management service could not be reached. Check your connection and try again.';
+    return 'Staff request failed. Please try again.';
+  }
+
   async function callStaffFunction(body) {
-    const { data, error } = await supabaseClient.functions.invoke('staff-management', { body });
-    if (error) throw new Error(data?.error || error.message || 'Staff request failed.');
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+    const session = sessionData?.session;
+    if (sessionError || !session?.access_token) {
+      throw new Error('Your sign-in has expired. Please sign in again.');
+    }
+
+    const invoke = (accessToken) => supabaseClient.functions.invoke('staff-management', {
+      body,
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    let result = await invoke(session.access_token);
+
+    if (getStaffFunctionStatus(result.error) === 401) {
+      const { data: refreshData, error: refreshError } = await supabaseClient.auth.refreshSession();
+      if (refreshError || !refreshData?.session?.access_token) {
+        console.error('Staff management session refresh failed.', { status: 401 });
+        throw new Error('Your sign-in has expired. Please sign in again, then retry.');
+      }
+      result = await invoke(refreshData.session.access_token);
+    }
+
+    const { data, error } = result;
+    if (error) {
+      console.error('Staff management request failed.', {
+        status: getStaffFunctionStatus(error),
+        errorType: error.name || 'UnknownError',
+      });
+      throw new Error(await getStaffFunctionErrorMessage(error));
+    }
     if (data?.error) throw new Error(data.error);
     return data;
   }
