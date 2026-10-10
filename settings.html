@@ -1216,7 +1216,7 @@
 
   async function checkAuthentication() {
 
-    await window.requireStaffPageAccess(supabaseClient, 'settings');
+    if (!(await window.requireStaffPageAccess(supabaseClient, 'settings'))) return;
 
     const {
       data: {

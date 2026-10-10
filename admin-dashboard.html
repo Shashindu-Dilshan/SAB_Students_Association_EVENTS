@@ -394,7 +394,7 @@ async function initializeDashboard() {
 
   try {
 
-    await window.requireStaffPageAccess(supabaseClient, 'dashboard');
+    if (!(await window.requireStaffPageAccess(supabaseClient, 'dashboard'))) return;
 
     // -----------------------------------------------------
     // Check session

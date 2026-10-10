@@ -1551,7 +1551,7 @@ document.addEventListener(
 
 async function checkAuthentication() {
 
-  await window.requireStaffPageAccess(supabaseClient, 'participants');
+  if (!(await window.requireStaffPageAccess(supabaseClient, 'participants'))) return;
 
   try {
 

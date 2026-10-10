@@ -1221,7 +1221,7 @@ body {
 
   async function checkAuthentication() {
 
-    await window.requireStaffPageAccess(supabaseClient, 'event');
+    if (!(await window.requireStaffPageAccess(supabaseClient, 'event'))) return;
 
     const {
       data: {

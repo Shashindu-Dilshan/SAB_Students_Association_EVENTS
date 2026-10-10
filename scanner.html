@@ -1054,7 +1054,7 @@
 
   async function checkAuthentication() {
 
-    await window.requireStaffPageAccess(supabaseClient, 'scanner');
+    if (!(await window.requireStaffPageAccess(supabaseClient, 'scanner'))) return;
 
     const {
       data: {

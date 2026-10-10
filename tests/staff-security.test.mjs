@@ -35,6 +35,19 @@ test("the migration scopes data policies by stored page permission", async () =>
   assert.match(sql, /security invoker/i);
 });
 
+test("admin contact email comes from the active admin record and is authenticated-only", async () => {
+  const sql = await read("supabase/migrations/20261010120000_admin_contact_email.sql");
+  assert.match(sql, /security definer/i);
+  assert.match(sql, /a\.role = 'ADMIN'/);
+  assert.match(sql, /a\.is_active/);
+  assert.match(sql, /a\.email/);
+  assert.match(sql, /revoke all[\s\S]*from public, anon/i);
+  assert.match(sql, /grant execute[\s\S]*to authenticated/i);
+  const guard = await read("assets/js/staff-access.js");
+  assert.match(guard, /rpc\("get_admin_contact_email"\)/);
+  assert.match(guard, /mailto:/);
+});
+
 test("staff management keeps credentials in Supabase Auth and checks ADMIN in the server", async () => {
   const edge = await read("supabase/functions/staff-management/index.ts");
   assert.match(edge, /SUPABASE_SERVICE_ROLE_KEY/);

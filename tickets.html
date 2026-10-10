@@ -856,7 +856,7 @@
 
         async function checkAuthentication() {
 
-            await window.requireStaffPageAccess(supabaseClient, 'tickets');
+            if (!(await window.requireStaffPageAccess(supabaseClient, 'tickets'))) return;
 
             try {
 

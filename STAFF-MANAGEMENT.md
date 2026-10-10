@@ -6,17 +6,18 @@ Staff accounts use Supabase Auth for email and password credentials. Temporary p
 
 Use a current Supabase CLI in a trusted environment. The CLI was not available in this checkout, so the migration file was named using the repository's existing timestamp convention.
 
-1. Review `supabase/migrations/20261009210520_staff_page_permissions.sql` and the function sources.
-2. Link the project and apply the migration:
+1. Review the pending migrations and function sources. The access-denied contact address is read from the active `ADMIN` account in `public.admins`; no email address is hardcoded in frontend files. Keep at least one active `ADMIN` account with a valid email address. Migration `20261010120000_admin_contact_email.sql` exposes only that contact email to authenticated users so the browser can build the mail draft.
+
+2. Link the project and apply the migrations:
 
    ```sh
    supabase link --project-ref xdaxxgsvorvfpnxteikv
    supabase db push
    ```
 
-3. In the Supabase Dashboard, open **Edge Functions → Secrets** and confirm `SUPABASE_SERVICE_ROLE_KEY` is set. If it is missing, add the key from the project’s API settings there. Never commit it, paste it into frontend code, or include it in command output or support logs.
+4. In the Supabase Dashboard, open **Edge Functions → Secrets** and confirm `SUPABASE_SERVICE_ROLE_KEY` is set. If it is missing, add the key from the project’s API settings there. Never commit it, paste it into frontend code, or include it in command output or support logs.
 
-4. Deploy the new function and redeploy the existing ticket functions with their new permission checks:
+5. Deploy the new function and redeploy the existing ticket functions with their new permission checks:
 
    ```sh
    supabase functions deploy staff-management --project-ref xdaxxgsvorvfpnxteikv
@@ -27,7 +28,7 @@ Use a current Supabase CLI in a trusted environment. The CLI was not available i
 
    `verify_jwt` remains enabled. The `staff-management` function verifies the caller's JWT and reads the caller's role from the database before using its server-side Auth admin client.
 
-5. Publish the website files through the repository's existing GitHub Pages deployment. The project URL and publishable key remain browser-visible as before; the service-role key must only exist in Edge Function secrets.
+6. Publish the website files through the repository's existing GitHub Pages deployment. The project URL and publishable key remain browser-visible as before; the service-role key must only exist in Edge Function secrets.
 
 ## Checks
 
