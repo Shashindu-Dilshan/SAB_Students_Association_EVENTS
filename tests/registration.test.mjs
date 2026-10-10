@@ -283,12 +283,15 @@ test("a QR renderer failure keeps the canvas and download hidden", async () => {
   assert.equal(h.qrCalls, 1);
 });
 
-test("the browser loads the published QR bundle and CSS honors hidden", async () => {
+test("the browser loads the locally vendored QR bundle and CSS honors hidden", async () => {
   const html = await read("register.html");
   const css = await read("assets/css/public.css");
+  const qrBundle = await read("assets/js/qrcode.min.js");
 
-  assert.match(html, /cdnjs\.cloudflare\.com\/ajax\/libs\/qrcode\/1\.5\.1\/qrcode\.min\.js/);
+  assert.match(html, /assets\/js\/qrcode\.min\.js\?v=qr-fix-20261010/);
   assert.doesNotMatch(html, /qrcode@1\.5\.4\/build\/qrcode\.min\.js/);
+  assert.match(qrBundle, /QRCode/);
+  assert.match(qrBundle, /toCanvas/);
   assert.match(html, /QR display is unavailable right now/);
   assert.match(css, /\[hidden\]\s*\{\s*display:\s*none\s*!important;/i);
 });
