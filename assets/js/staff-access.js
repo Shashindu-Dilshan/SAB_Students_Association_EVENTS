@@ -1,5 +1,6 @@
 /* Shared browser-side route guard. Database RLS remains the authority. */
 (function () {
+  document.documentElement.classList.add("staff-access-pending");
   const pages = [
     { key: "dashboard", label: "Dashboard", path: "admin-dashboard.html" },
     { key: "participants", label: "Participants", path: "participants.html" },
@@ -55,6 +56,7 @@
       const item = pages.find(({ path }) => path === link.getAttribute("href"));
       if (item) link.hidden = !canVisit(admin, item.key);
     }
+    document.documentElement.classList.remove("staff-access-pending");
 
     if (page && page !== "change-password" && !canVisit(admin, page)) {
       window.location.replace(landingPage(admin));

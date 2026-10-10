@@ -164,3 +164,9 @@
   width: 100%;
   margin: 0;
 }
+
+/* Preserve the native hidden state when sidebar layout rules set display explicitly. */
+.sidebar-nav [hidden] { display: none !important; }
+
+/* Keep staff navigation hidden until the current account's page grants load. */
+.staff-access-pending .sidebar-nav { visibility: hidden; }
