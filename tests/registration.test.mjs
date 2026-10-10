@@ -195,6 +195,7 @@ test("QR display is hidden when disabled and registration still succeeds", async
   assert.equal(h.elements.get("download-qr").hidden, true);
   assert.equal(h.elements.get("qr-not-displayed").hidden, false);
   assert.equal(h.elements.get("qr-error").hidden, true);
+  assert.equal(h.elements.get("success-ticket-note").textContent.includes("QR code"), false);
   assert.equal(h.qrCalls, 0);
   assert.equal(h.submitPayload.email, "person@example.com");
 });
@@ -211,6 +212,7 @@ test("QR display and download are available only when Supabase returns true", as
   assert.equal(h.canvas.hidden, false);
   assert.equal(h.elements.get("download-qr").hidden, false);
   assert.equal(h.elements.get("qr-not-displayed").hidden, true);
+  assert.equal(h.elements.get("success-ticket-note").textContent.includes("QR code"), true);
   assert.equal(h.qrCalls, 1);
 });
 
@@ -227,6 +229,7 @@ test("a failed QR-setting lookup keeps registration working and hides the QR", a
   assert.equal(h.elements.get("download-qr").hidden, true);
   assert.equal(h.elements.get("qr-not-displayed").hidden, false);
   assert.equal(h.elements.get("qr-error").hidden, true);
+  assert.equal(h.elements.get("success-ticket-note").textContent.includes("QR code"), false);
   assert.equal(h.qrCalls, 0);
 });
 
