@@ -12,7 +12,9 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const publicSource = await read("assets/js/public.js");
 
 function createRegistrationHarness({
-  qrSetting = { data: { show_qr_after_registration: false }, error: null },
+  showQrAfterRegistration = false,
+  qrLibraryAvailable = true,
+  qrRenderer = async () => {},
   invokeResult = {
     data: {
       success: true,
@@ -59,11 +61,13 @@ function createRegistrationHarness({
     event_time: "10:00 AM",
     venue: "Colombo",
     registration_open: true,
+    show_qr_after_registration: showQrAfterRegistration,
   };
   let submitPayload = null;
   let qrCalls = 0;
-  let qrSettingsRequested = false;
+  let qrArgs = null;
   let readyCallback = null;
+  const downloads = [];
 
   const client = {
     from(table) {
@@ -73,13 +77,7 @@ function createRegistrationHarness({
             eq() { return query; },
             order() { return query; },
             limit() { return query; },
-            async maybeSingle() {
-              if (table === "events" && fields === "show_qr_after_registration") {
-                qrSettingsRequested = true;
-                return qrSetting;
-              }
-              return { data: registrationEvent, error: null };
-            },
+            async maybeSingle() { return { data: registrationEvent, error: null }; },
           };
           return query;
         },
@@ -114,16 +112,26 @@ function createRegistrationHarness({
       if (type === "DOMContentLoaded") readyCallback = listener;
     },
     getElementById: getElement,
-    createElement() {
-      return { click() {}, href: "", download: "" };
+    createElement(tagName) {
+      return {
+        tagName,
+        click() { downloads.push({ href: this.href, download: this.download }); },
+        href: "",
+        download: "",
+      };
+    },
+  };
+  const qrCode = {
+    async toCanvas(...args) {
+      qrCalls += 1;
+      qrArgs = args;
+      await qrRenderer(...args);
     },
   };
   const window = {
     location: { search: "?event_code=SAB26" },
     supabase: { createClient: () => client },
-    QRCode: {
-      async toCanvas() { qrCalls += 1; },
-    },
+    QRCode: qrLibraryAvailable ? qrCode : undefined,
   };
   const context = {
     window,
@@ -146,7 +154,8 @@ function createRegistrationHarness({
     canvas,
     qrWrap,
     get qrCalls() { return qrCalls; },
-    get qrSettingsRequested() { return qrSettingsRequested; },
+    get qrArgs() { return qrArgs; },
+    downloads,
     get submitPayload() { return submitPayload; },
     async ready() {
       await new Promise((resolve) => setImmediate(resolve));
@@ -182,10 +191,9 @@ test("the backend recognizes only the email unique-index violation", () => {
 
 test("QR display is hidden when disabled and registration still succeeds", async () => {
   const h = createRegistrationHarness({
-    qrSetting: { data: { show_qr_after_registration: false }, error: null },
+    showQrAfterRegistration: false,
   });
   await h.ready();
-  assert.equal(h.qrSettingsRequested, true);
   await h.submit();
 
   assert.equal(h.elements.get("registration-success").hidden, false);
@@ -202,7 +210,7 @@ test("QR display is hidden when disabled and registration still succeeds", async
 
 test("QR display and download are available only when Supabase returns true", async () => {
   const h = createRegistrationHarness({
-    qrSetting: { data: { show_qr_after_registration: true }, error: null },
+    showQrAfterRegistration: true,
   });
   await h.ready();
   await h.submit();
@@ -214,11 +222,19 @@ test("QR display and download are available only when Supabase returns true", as
   assert.equal(h.elements.get("qr-not-displayed").hidden, true);
   assert.equal(h.elements.get("success-ticket-note").textContent.includes("QR code"), true);
   assert.equal(h.qrCalls, 1);
+  assert.equal(h.qrArgs[0], h.canvas);
+  assert.equal(h.qrArgs[1], "SAB26-ABC123");
+  assert.equal(h.qrArgs[2].width, 220);
+  await h.elements.get("download-qr").listeners.click();
+  assert.deepEqual(h.downloads, [{
+    href: "data:image/png;base64,QR",
+    download: "SAB26-ABC123-QR.png",
+  }]);
 });
 
-test("a failed QR-setting lookup keeps registration working and hides the QR", async () => {
+test("QR display stays off when the visibility setting is missing", async () => {
   const h = createRegistrationHarness({
-    qrSetting: { data: null, error: new Error("setting unavailable") },
+    showQrAfterRegistration: null,
   });
   await h.ready();
   await h.submit();
@@ -231,6 +247,50 @@ test("a failed QR-setting lookup keeps registration working and hides the QR", a
   assert.equal(h.elements.get("qr-error").hidden, true);
   assert.equal(h.elements.get("success-ticket-note").textContent.includes("QR code"), false);
   assert.equal(h.qrCalls, 0);
+});
+
+test("a missing QR CDN bundle shows an error and keeps the canvas and download hidden", async () => {
+  const h = createRegistrationHarness({
+    showQrAfterRegistration: true,
+    qrLibraryAvailable: false,
+  });
+  await h.ready();
+  await h.submit();
+
+  assert.equal(h.elements.get("registration-success").hidden, false);
+  assert.equal(h.elements.get("success-ticket-id").textContent, "SAB26-ABC123");
+  assert.equal(h.qrWrap.hidden, true);
+  assert.equal(h.canvas.hidden, true);
+  assert.equal(h.elements.get("qr-error").hidden, false);
+  assert.equal(h.elements.get("download-qr").hidden, true);
+  assert.equal(h.qrCalls, 0);
+});
+
+test("a QR renderer failure keeps the canvas and download hidden", async () => {
+  const h = createRegistrationHarness({
+    showQrAfterRegistration: true,
+    qrRenderer: async () => { throw new Error("canvas unavailable"); },
+  });
+  await h.ready();
+  await h.submit();
+
+  assert.equal(h.elements.get("registration-success").hidden, false);
+  assert.equal(h.elements.get("success-ticket-id").textContent, "SAB26-ABC123");
+  assert.equal(h.qrWrap.hidden, true);
+  assert.equal(h.canvas.hidden, true);
+  assert.equal(h.elements.get("qr-error").hidden, false);
+  assert.equal(h.elements.get("download-qr").hidden, true);
+  assert.equal(h.qrCalls, 1);
+});
+
+test("the browser loads the published QR bundle and CSS honors hidden", async () => {
+  const html = await read("register.html");
+  const css = await read("assets/css/public.css");
+
+  assert.match(html, /cdnjs\.cloudflare\.com\/ajax\/libs\/qrcode\/1\.5\.1\/qrcode\.min\.js/);
+  assert.doesNotMatch(html, /qrcode@1\.5\.4\/build\/qrcode\.min\.js/);
+  assert.match(html, /QR display is unavailable right now/);
+  assert.match(css, /\[hidden\]\s*\{\s*display:\s*none\s*!important;/i);
 });
 
 test("the duplicate-email response is shown to participants", async () => {

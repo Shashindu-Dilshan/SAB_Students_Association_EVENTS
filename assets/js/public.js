@@ -207,10 +207,10 @@
       return;
     }
 
-    qrCanvas.hidden = false;
-    qrWrap.hidden = false;
+    qrCanvas.hidden = true;
+    qrWrap.hidden = true;
     qrError.hidden = true;
-    downloadButton.hidden = false;
+    downloadButton.hidden = true;
     qrNotDisplayed.hidden = true;
     ticketNote.textContent =
       "Please save your Ticket ID and QR code. Your electronic ticket may be sent separately by the event administration.";
@@ -225,6 +225,9 @@
         errorCorrectionLevel: "M",
         color: { dark: "#10284b", light: "#ffffff" }
       });
+      if (typeof qrCanvas.toDataURL !== "function") {
+        throw new Error("Canvas download is unavailable");
+      }
     } catch (error) {
       console.error("Unable to generate ticket QR code:", error);
       qrCanvas.hidden = true;
@@ -242,6 +245,9 @@
       link.download = ticketId + "-QR.png";
       link.click();
     }, { once: true });
+    qrCanvas.hidden = false;
+    qrWrap.hidden = false;
+    downloadButton.hidden = false;
   }
 
   async function handleRegistrationSubmit(event, registrationEvent) {
