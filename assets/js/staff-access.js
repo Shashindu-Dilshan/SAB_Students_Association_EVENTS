@@ -1,5 +1,5 @@
 /* Shared browser-side route guard. Database RLS remains the authority. */
-(function () {
+(function () {\n  document.documentElement.classList.add("staff-access-pending");
   const pages = [
     { key: "dashboard", label: "Dashboard", path: "admin-dashboard.html" },
     { key: "participants", label: "Participants", path: "participants.html" },
