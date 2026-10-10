@@ -899,7 +899,7 @@ body {
                 </div>
 
                 <div class="form-help">
-                  Control registration and QR scanner availability.
+                  Control registration, QR code visibility, and scanner availability.
                 </div>
               </div>
 
@@ -963,6 +963,32 @@ body {
 
                   <span class="slider"></span>
 
+                </label>
+
+              </div>
+
+              <!-- QR code visibility -->
+              <div class="control-item">
+
+                <div class="control-info">
+
+                  <div class="control-title">
+                    Show QR Code After Registration
+                  </div>
+
+                  <div class="control-description">
+                    Allow participants to view and download their QR code on the registration success page.
+                  </div>
+
+                </div>
+
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    id="showQrAfterRegistration"
+                    aria-label="Show QR Code After Registration"
+                  >
+                  <span class="slider"></span>
                 </label>
 
               </div>
@@ -1480,6 +1506,9 @@ body {
     document.getElementById('scannerEnabled').checked =
       event.scanner_enabled === true;
 
+    document.getElementById('showQrAfterRegistration').checked =
+      event.show_qr_after_registration === true;
+
 
     updateLogoPreview();
 
@@ -1530,6 +1559,9 @@ body {
 
     const scannerEnabled =
       document.getElementById('scannerEnabled').checked;
+
+    const showQrAfterRegistration =
+      document.getElementById('showQrAfterRegistration').checked;
 
 
     /* VALIDATION */
@@ -1612,7 +1644,10 @@ body {
             registrationOpen,
 
           scanner_enabled:
-            scannerEnabled
+            scannerEnabled,
+
+          show_qr_after_registration:
+            showQrAfterRegistration
 
         })
         .eq('id', currentEvent.id)
@@ -1794,7 +1829,8 @@ body {
       'eventTime',
       'eventVenue',
       'registrationOpen',
-      'scannerEnabled'
+      'scannerEnabled',
+      'showQrAfterRegistration'
 
     ];
 

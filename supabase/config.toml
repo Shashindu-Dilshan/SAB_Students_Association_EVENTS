@@ -3,3 +3,5 @@ project_id = "xdaxxgsvorvfpnxteikv"
 [functions.staff-management]
 verify_jwt = true
 
+[functions.register-participant]
+verify_jwt = true

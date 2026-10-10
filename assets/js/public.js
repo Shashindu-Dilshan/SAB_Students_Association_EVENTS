@@ -114,6 +114,23 @@
       return null;
     }
 
+    let showQrAfterRegistration = false;
+    try {
+      const { data: qrSettings, error: qrSettingsError } = await supabaseClient
+        .from("events")
+        .select("show_qr_after_registration")
+        .eq("id", event.id)
+        .maybeSingle();
+      if (qrSettingsError) throw qrSettingsError;
+      showQrAfterRegistration =
+        qrSettings?.show_qr_after_registration === true;
+    } catch (error) {
+      console.error(
+        "Unable to load QR visibility setting; hiding the QR code:",
+        error
+      );
+    }
+
     document.getElementById("registration-loading").hidden = true;
     document.getElementById("registration-layout").hidden = false;
     document.getElementById("registration-event-name").textContent = event.event_name || "SABSA Event";
@@ -132,7 +149,10 @@
       return null;
     }
 
-    return event;
+    return {
+      ...event,
+      show_qr_after_registration: showQrAfterRegistration
+    };
   }
 
   function displayFormError(message) {
@@ -156,7 +176,8 @@
     }
 
     if (status === 409) {
-      return "This university registration number is already registered for this event.";
+      return serverMessage ||
+        "This participant is already registered for this event.";
     }
     if (status === 403) {
       return "Registration for this event is currently closed.";
@@ -170,7 +191,7 @@
     return serverMessage || "We could not complete your registration. Check your connection and try again.";
   }
 
-  async function showRegistrationSuccess(data) {
+  async function showRegistrationSuccess(data, registrationEvent) {
     const ticketId = data?.ticket?.ticket_id;
     if (typeof ticketId !== "string" || !ticketId.trim()) {
       throw new Error("The registration was received, but the ticket details were missing. Please contact the event administration.");
@@ -183,8 +204,26 @@
     document.getElementById("registration-success").hidden = false;
 
     const qrCanvas = document.getElementById("ticket-qr");
-    const qrWrap = qrCanvas.parentElement;
+    const qrWrap = document.getElementById("qr-wrap");
     const qrError = document.getElementById("qr-error");
+    const qrNotDisplayed = document.getElementById("qr-not-displayed");
+    const downloadButton = document.getElementById("download-qr");
+
+    if (registrationEvent?.show_qr_after_registration !== true) {
+      qrCanvas.hidden = true;
+      qrWrap.hidden = true;
+      qrError.hidden = true;
+      downloadButton.hidden = true;
+      qrNotDisplayed.hidden = false;
+      return;
+    }
+
+    qrCanvas.hidden = false;
+    qrWrap.hidden = false;
+    qrError.hidden = true;
+    downloadButton.hidden = false;
+    qrNotDisplayed.hidden = true;
+
     try {
       if (!window.QRCode || typeof window.QRCode.toCanvas !== "function") {
         throw new Error("QR library unavailable");
@@ -197,12 +236,14 @@
       });
     } catch (error) {
       console.error("Unable to generate ticket QR code:", error);
+      qrCanvas.hidden = true;
       qrWrap.hidden = true;
       qrError.hidden = false;
-      document.getElementById("download-qr").disabled = true;
+      downloadButton.hidden = true;
+      return;
     }
 
-    document.getElementById("download-qr").addEventListener("click", () => {
+    downloadButton.addEventListener("click", () => {
       const link = document.createElement("a");
       link.href = qrCanvas.toDataURL("image/png");
       link.download = ticketId + "-QR.png";
@@ -233,7 +274,7 @@
     const payload = {
       event_code: registrationEvent.event_code,
       full_name: String(formData.get("full_name")).trim(),
-      email: String(formData.get("email")).trim(),
+      email: String(formData.get("email")).trim().toLowerCase(),
       phone: String(formData.get("phone") || "").trim(),
       registration_no: String(formData.get("registration_no")).trim(),
       batch: String(formData.get("batch")).trim(),
@@ -257,7 +298,7 @@
         displayFormError(data?.error || "We could not complete your registration. Please try again.");
         return;
       }
-      await showRegistrationSuccess(data);
+      await showRegistrationSuccess(data, registrationEvent);
     } catch (error) {
       console.error("Registration request failed:", error);
       displayFormError(error?.message?.includes("ticket details")
