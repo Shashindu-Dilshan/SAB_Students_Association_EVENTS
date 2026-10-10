@@ -1720,3 +1720,6 @@ td {
     }
 
 }
+
+/* Preserve the native hidden state when layout rules set display explicitly. */
+[hidden] { display: none !important; }
