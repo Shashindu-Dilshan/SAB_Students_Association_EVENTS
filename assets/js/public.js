@@ -208,6 +208,7 @@
     const qrError = document.getElementById("qr-error");
     const qrNotDisplayed = document.getElementById("qr-not-displayed");
     const downloadButton = document.getElementById("download-qr");
+    const ticketNote = document.getElementById("success-ticket-note");
 
     if (registrationEvent?.show_qr_after_registration !== true) {
       qrCanvas.hidden = true;
@@ -215,6 +216,8 @@
       qrError.hidden = true;
       downloadButton.hidden = true;
       qrNotDisplayed.hidden = false;
+      ticketNote.textContent =
+        "Please retain your Ticket ID. Your electronic ticket may be sent separately by the event administration.";
       return;
     }
 
@@ -223,6 +226,8 @@
     qrError.hidden = true;
     downloadButton.hidden = false;
     qrNotDisplayed.hidden = true;
+    ticketNote.textContent =
+      "Please save your Ticket ID and QR code. Your electronic ticket may be sent separately by the event administration.";
 
     try {
       if (!window.QRCode || typeof window.QRCode.toCanvas !== "function") {
@@ -240,6 +245,8 @@
       qrWrap.hidden = true;
       qrError.hidden = false;
       downloadButton.hidden = true;
+      ticketNote.textContent =
+        "Please retain your Ticket ID. Your electronic ticket may be sent separately by the event administration.";
       return;
     }
 
