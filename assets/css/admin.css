@@ -1723,3 +1723,6 @@ td {
 
 /* Preserve the native hidden state when layout rules set display explicitly. */
 [hidden] { display: none !important; }
+
+/* Keep staff navigation hidden until the current account's page grants load. */
+.staff-access-pending .sidebar-nav { visibility: hidden; }
