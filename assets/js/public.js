@@ -4,7 +4,7 @@
   const SUPABASE_URL = "https://xdaxxgsvorvfpnxteikv.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_wRysyx1ek-J7XrFOLxXfnA_Fp_0UsFO";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-  const EVENT_FIELDS = "event_name,event_code,event_date,event_time,venue,description,logo_url,registration_open,created_at";
+  const EVENT_FIELDS = "event_name,event_code,event_date,event_time,venue,description,logo_url,registration_open,show_qr_after_registration,created_at";
 
   function formatEventDate(dateValue) {
     if (!dateValue) return "Date to be announced";
@@ -114,22 +114,8 @@
       return null;
     }
 
-    let showQrAfterRegistration = false;
-    try {
-      const { data: qrSettings, error: qrSettingsError } = await supabaseClient
-        .from("events")
-        .select("show_qr_after_registration")
-        .eq("id", event.id)
-        .maybeSingle();
-      if (qrSettingsError) throw qrSettingsError;
-      showQrAfterRegistration =
-        qrSettings?.show_qr_after_registration === true;
-    } catch (error) {
-      console.error(
-        "Unable to load QR visibility setting; hiding the QR code:",
-        error
-      );
-    }
+    const showQrAfterRegistration =
+      event.show_qr_after_registration === true;
 
     document.getElementById("registration-loading").hidden = true;
     document.getElementById("registration-layout").hidden = false;
